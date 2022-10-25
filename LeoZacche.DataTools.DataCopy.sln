@@ -19,6 +19,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.Utils.UnitTests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests\LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests.csproj", "{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeoZacche.DataTools.DataCopy.Engine.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.UnitTests\LeoZacche.DataTools.DataCopy.Engine.UnitTests.csproj", "{D0506532-C41B-43C7-9BBD-DB1E00772E8B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{B3CCEEF1-D87A-4515-9FAE-C73ACC6E77C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine.MicrosoftSqlServer", "Engine.MicrosoftSqlServer", "{4A015EB1-B1A3-420D-AB6E-EA5121A43E4D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,13 +59,21 @@ Global
 		{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0506532-C41B-43C7-9BBD-DB1E00772E8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0506532-C41B-43C7-9BBD-DB1E00772E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0506532-C41B-43C7-9BBD-DB1E00772E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0506532-C41B-43C7-9BBD-DB1E00772E8B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{217BDDB4-5179-410E-8D0B-97F0C0604A7E} = {B3CCEEF1-D87A-4515-9FAE-C73ACC6E77C7}
+		{8C627C4A-D580-49D4-96BC-FEC5786EA952} = {4A015EB1-B1A3-420D-AB6E-EA5121A43E4D}
 		{79805600-E2BD-4139-9068-0AF5627DA51A} = {87B76CAA-1DAD-4A8A-9885-27A4239C99E7}
 		{44F042C2-3BA3-4E58-90C1-74BC994F329C} = {87B76CAA-1DAD-4A8A-9885-27A4239C99E7}
+		{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F} = {4A015EB1-B1A3-420D-AB6E-EA5121A43E4D}
+		{D0506532-C41B-43C7-9BBD-DB1E00772E8B} = {B3CCEEF1-D87A-4515-9FAE-C73ACC6E77C7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F619E14B-DFB5-4049-B9D6-7310FB29B1AE}

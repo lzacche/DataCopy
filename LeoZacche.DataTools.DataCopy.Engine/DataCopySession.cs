@@ -7,7 +7,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine
     {
         public DataConnection ConnectionSource { get; private set; }
         public DataConnection ConnectionDestination { get; private set; }
-        public IList<Table> TablesToCopy {get; private set;}
+        public IList<Table> TablesToCopy { get; private set; }
 
 
         public DataCopySession()
@@ -51,6 +51,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             if (OnCopyEnded != null)
                 OnCopyEnded(this, new EventArgs());
         }
+
         private void checkPreRequisites()
         {
             if (OnPreCheckStarted != null)

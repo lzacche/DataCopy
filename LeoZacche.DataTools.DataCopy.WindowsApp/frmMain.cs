@@ -1,13 +1,15 @@
-﻿using LeoZacche.DataTools.DataCopy.Engine;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using LeoZacche.DataTools.DataCopy.Engine;
+using LeoZacche.DataTools.DataCopy.Engine.Extensions;
 
 namespace LeoZacche.DataTools.DataCopy.WindowsApp
 {
@@ -104,11 +106,21 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                 return;
             }
 
-            var frmRootsEditor = new frmSelecaoRoots(this.theSession.ConnectionSource);// this.theSession.ConnectionSource, this.theSession.ConnectionDestination);
+            var frmRootsEditor = new frmSelecaoRoots(this.theSession.ConnectionSource, this.theSession.TablesToCopy);
+            var resultEdicao = frmRootsEditor.ShowDialog();
 
-            frmRootsEditor.ShowDialog();
+            if (resultEdicao == DialogResult.OK)
+            {
+                this.theSession.TablesToCopy.Clear();
+                this.theSession.TablesToCopy.CloneFrom(frmRootsEditor.TablesToCopy);
+            }
 
             frmRootsEditor.Dispose();
+
+            bool anyTableSelected = this.theSession.TablesToCopy.Any();
+            btnPasso3.Enabled = anyTableSelected;
+            btnPasso4.Enabled = anyTableSelected;
+            btnPasso5.Enabled = anyTableSelected;
         }
 
         #endregion

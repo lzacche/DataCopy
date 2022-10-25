@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using LeoZacche.DataTools.DataCopy.Contracts;
 using LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer;

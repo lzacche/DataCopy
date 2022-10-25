@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LeoZacche.DataTools.DataCopy.Contracts\LeoZacche.DataTools.DataCopy.Contracts.csproj" />
+    <ProjectReference Include="..\LeoZacche.Utils\LeoZacche.Utils.csproj" />
   </ItemGroup>
 
 </Project>

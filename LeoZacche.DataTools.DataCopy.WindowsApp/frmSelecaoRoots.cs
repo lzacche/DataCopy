@@ -7,8 +7,9 @@ using System.Windows.Forms;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-using LeoZacche.DataTools.DataCopy.Engine;
 using LeoZacche.Utils;
+using LeoZacche.DataTools.DataCopy.Engine;
+using LeoZacche.DataTools.DataCopy.Engine.Extensions;
 
 namespace LeoZacche.DataTools.DataCopy.WindowsApp
 {
@@ -22,14 +23,20 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private TreeNode nodeBeingEdited = null;
         private bool columnEditEndingIsAlreadyRunning = false;
 
+        public IList<Table> TablesToCopy { get; internal set; }
+
         public frmSelecaoRoots()
         {
             InitializeComponent();
+            this.TablesToCopy = new List<Table>();
         }
 
-        public frmSelecaoRoots(DataConnection dataConnection) : this()
+        public frmSelecaoRoots(DataConnection dataConnection, IList<Table> tablesToCopy) : this()
         {
             this.theConnection = dataConnection;
+            this.TablesToCopy.Clear();
+            foreach (var t in tablesToCopy)
+                this.TablesToCopy.Add(t);
         }
 
 
@@ -37,7 +44,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
         private void frmSelecaoRoots_Activated(object sender, EventArgs e)
         {
-            layoutControls();   
+            layoutControls();
         }
         private void frmSelecaoRoots_Resize(object sender, EventArgs e)
         {
@@ -78,12 +85,17 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         }
         private void lstTabelas_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            this.UseWaitCursor = true;
+            this.Refresh();
+
             int index = this.lstTabelas.IndexFromPoint(e.Location);
             if (index != ListBox.NoMatches)
             {
                 var tablename = (string)this.lstTabelas.Items[index];
                 addTableToSelected(tablename);
             }
+
+            this.UseWaitCursor = false;
         }
         private void tvwRegistros_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
@@ -188,9 +200,16 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             int margem = 10;
             decimal divisaoVertical = 0.6m;
 
-            int alturaUtil = this.ClientSize.Height - (2 * margem);
-            int larguraUtil = this.ClientSize.Width - (3 * margem);
+            // tamanho e posição dos botões
+            btnFechar.Left = this.ClientSize.Width - margem - btnFechar.Width;
+            btnOk.Left = btnFechar.Left - margem - btnOk.Width;
+            btnOk.Top = this.ClientSize.Height - margem - btnOk.Height;
+            btnFechar.Top = btnOk.Top;
 
+            int larguraUtil = this.ClientSize.Width - (3 * margem);
+            int alturaUtil = this.ClientSize.Height - (2 * margem);
+            // espaço para os botões
+            alturaUtil -= (btnOk.Height + margem);
 
             grpTabelasOrigem.Top = margem;
             grpTabelasOrigem.Height = alturaUtil;
@@ -220,7 +239,13 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         }
         private IList<string> GetTables()
         {
+            this.UseWaitCursor = true;
+            this.Refresh();
+
             var list = this.theConnection.GetAllTableNames();
+
+            this.UseWaitCursor = false;
+            this.Refresh();
 
             return list;
         }
@@ -364,7 +389,49 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
         }
 
+        private void btnFechar_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
+        }
 
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            var listToCopy = buildTablesToCopyList(tvwRegistros.Nodes);
+            this.TablesToCopy.CloneFrom(listToCopy);
+
+            this.DialogResult = DialogResult.OK;
+            this.Close();
+        }
+
+        internal IList<Table> buildTablesToCopyList(TreeNodeCollection listOfTableNodes)
+        {
+            IList<Table> theList = new List<Table>();
+
+            foreach (TreeNode tableNode in listOfTableNodes)
+            {
+                var tableToCopy = new Table() { Name = tableNode.Text };
+
+                foreach (TreeNode rowNode in tableNode.Nodes)
+                {
+                    var row = new Row();
+
+                    foreach (TreeNode colNode in rowNode.Nodes)
+                    {
+                        var colDefinition = colNode.ConvertTagTo<DataColumn>();
+                        var columnName = colDefinition.ColumnName;
+                        dynamic vaolumnValue = colDefinition.ExtendedProperties[COLUMN_VALUE];
+                        row.PrimaryKeyColumnsValues.Add(columnName, vaolumnValue);
+                    }
+
+                    tableToCopy.RowsToCopy.Add(row);
+                }
+
+                theList.Add(tableToCopy);
+            }
+
+            return theList;
+        }
     }
 
     internal static class TreeViewExtesions
@@ -381,4 +448,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             return resultado;
         }
     }
+
+
 }

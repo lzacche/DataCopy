@@ -29,17 +29,19 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("pk column: valor");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("row", new System.Windows.Forms.TreeNode[] {
-            treeNode1});
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Tabela", new System.Windows.Forms.TreeNode[] {
-            treeNode2});
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("pk column: valor");
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("row", new System.Windows.Forms.TreeNode[] {
+            treeNode4});
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Tabela", new System.Windows.Forms.TreeNode[] {
+            treeNode5});
             this.grpTabelasOrigem = new System.Windows.Forms.GroupBox();
             this.lstTabelas = new System.Windows.Forms.ListBox();
             this.txtFiltroTabela = new System.Windows.Forms.TextBox();
             this.grpRegistrosCopiar = new System.Windows.Forms.GroupBox();
             this.txtColumnValue = new System.Windows.Forms.TextBox();
             this.tvwRegistros = new System.Windows.Forms.TreeView();
+            this.btnFechar = new System.Windows.Forms.Button();
+            this.btnOk = new System.Windows.Forms.Button();
             this.grpTabelasOrigem.SuspendLayout();
             this.grpRegistrosCopiar.SuspendLayout();
             this.SuspendLayout();
@@ -101,20 +103,42 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.tvwRegistros.LabelEdit = true;
             this.tvwRegistros.Location = new System.Drawing.Point(47, 90);
             this.tvwRegistros.Name = "tvwRegistros";
-            treeNode1.Checked = true;
-            treeNode1.Name = "Node2";
-            treeNode1.Text = "pk column: valor";
-            treeNode2.Name = "Node1";
-            treeNode2.Text = "row";
-            treeNode3.Name = "Node0";
-            treeNode3.Text = "Tabela";
+            treeNode4.Checked = true;
+            treeNode4.Name = "Node2";
+            treeNode4.Text = "pk column: valor";
+            treeNode5.Name = "Node1";
+            treeNode5.Text = "row";
+            treeNode6.Name = "Node0";
+            treeNode6.Text = "Tabela";
             this.tvwRegistros.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode3});
+            treeNode6});
             this.tvwRegistros.Size = new System.Drawing.Size(217, 123);
             this.tvwRegistros.TabIndex = 0;
             this.tvwRegistros.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.tvwRegistros_AfterLabelEdit);
             this.tvwRegistros.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvwRegistros_NodeMouseDoubleClick);
             this.tvwRegistros.Resize += new System.EventHandler(this.tvwRegistros_Resize);
+            // 
+            // btnFechar
+            // 
+            this.btnFechar.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnFechar.Location = new System.Drawing.Point(723, 435);
+            this.btnFechar.Name = "btnFechar";
+            this.btnFechar.Size = new System.Drawing.Size(98, 35);
+            this.btnFechar.TabIndex = 8;
+            this.btnFechar.Text = "&Fechar";
+            this.btnFechar.UseVisualStyleBackColor = true;
+            this.btnFechar.Click += new System.EventHandler(this.btnFechar_Click);
+            // 
+            // btnOk
+            // 
+            this.btnOk.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnOk.Location = new System.Drawing.Point(597, 423);
+            this.btnOk.Name = "btnOk";
+            this.btnOk.Size = new System.Drawing.Size(98, 35);
+            this.btnOk.TabIndex = 7;
+            this.btnOk.Text = "&Ok";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // frmSelecaoRoots
             // 
@@ -122,6 +146,8 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CausesValidation = false;
             this.ClientSize = new System.Drawing.Size(819, 470);
+            this.Controls.Add(this.btnFechar);
+            this.Controls.Add(this.btnOk);
             this.Controls.Add(this.grpRegistrosCopiar);
             this.Controls.Add(this.grpTabelasOrigem);
             this.Name = "frmSelecaoRoots";
@@ -145,5 +171,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private System.Windows.Forms.ListBox lstTabelas;
         private System.Windows.Forms.TreeView tvwRegistros;
         private System.Windows.Forms.TextBox txtColumnValue;
+        private System.Windows.Forms.Button btnFechar;
+        private System.Windows.Forms.Button btnOk;
     }
 }

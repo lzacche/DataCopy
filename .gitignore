@@ -348,3 +348,12 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/Plugins/unix/lib/netcoreapp2.1
+/Plugins/win/lib/netcoreapp2.1
+/Plugins/win-arm64/native
+/Plugins/win-x64/native
+/Plugins/LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.deps.json
+/Plugins/win-x86/native
+/Plugins/System.Data.SqlClient.dll
+/Plugins/LeoZacche.Utils.dll
+/Plugins/LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.dll

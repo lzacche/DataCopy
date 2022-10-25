@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LeoZacche.DataTools.DataCopy.Contracts\LeoZacche.DataTools.DataCopy.Contracts.csproj" />
+    <ProjectReference Include="..\LeoZacche.Utils\LeoZacche.Utils.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(TargetPath) $(SolutionDir)\Plugins\&#xD;&#xA;copy $(TargetDir)$(TargetName).deps.json $(SolutionDir)\Plugins\&#xD;&#xA;copy $(OutDir)System.Data.SqlClient.dll $(SolutionDir)\Plugins\&#xD;&#xA;xcopy $(OutDir)runtimes $(SolutionDir)\Plugins\ /s /e /y" />
+  </Target>
+
+</Project>

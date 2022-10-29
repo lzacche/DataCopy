@@ -4,4 +4,17 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Sql2006DataTypeEnum.cs" />
+    <Compile Remove="Sql2008DataTypeEnum.cs" />
+    <Compile Remove="Sql2011DataTypeEnum.cs" />
+    <Compile Remove="SqlAnsiDataTypes\Sql2006DataTypeEnum.cs" />
+    <Compile Remove="SqlAnsiDataTypes\Sql2008DataTypeEnum.cs" />
+    <Compile Remove="SqlAnsiDataTypes\Sql2011DataTypeEnum.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LeoZacche.Utils\LeoZacche.Utils.csproj" />
+  </ItemGroup>
+
 </Project>

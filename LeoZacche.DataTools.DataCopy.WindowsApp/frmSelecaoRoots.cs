@@ -9,7 +9,8 @@ using System.Collections.Generic;
 
 using LeoZacche.Utils;
 using LeoZacche.DataTools.DataCopy.Engine;
-using LeoZacche.DataTools.DataCopy.Engine.Extensions;
+using LeoZacche.DataTools.DataCopy.Contracts;
+using LeoZacche.DataTools.DataCopy.Contracts.Extensions;
 
 namespace LeoZacche.DataTools.DataCopy.WindowsApp
 {
@@ -23,15 +24,15 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private TreeNode nodeBeingEdited = null;
         private bool columnEditEndingIsAlreadyRunning = false;
 
-        public IList<Table> TablesToCopy { get; internal set; }
+        public IList<ITable> TablesToCopy { get; internal set; }
 
         public frmSelecaoRoots()
         {
             InitializeComponent();
-            this.TablesToCopy = new List<Table>();
+            this.TablesToCopy = new List<ITable>();
         }
 
-        public frmSelecaoRoots(DataConnection dataConnection, IList<Table> tablesToCopy) : this()
+        public frmSelecaoRoots(DataConnection dataConnection, IList<ITable> tablesToCopy) : this()
         {
             this.theConnection = dataConnection;
             this.TablesToCopy.Clear();
@@ -52,11 +53,13 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         }
         private void frmSelecaoRoots_Load(object sender, EventArgs e)
         {
+            /*
             if (this.theConnection == null)
                 throw new Exception("Conexão não foi informada.");
 
             if (this.theConnection.DatabaseOrSchema == null)
                 throw new Exception("Database or Schema não foi informado.");
+            */
 
             this.txtColumnValue.Visible = false;
             if (this.tableList == null)
@@ -188,7 +191,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                     e.Cancel = false; // controle pode perder o foco!
                 }
             }
-            catch (Exception ex)
+            catch //(Exception ex)
             {
                 e.Cancel = true; // controle NÃO PODE perder o foco!
                 // TODO: pensar em uma forma de feedback
@@ -404,9 +407,9 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.Close();
         }
 
-        internal IList<Table> buildTablesToCopyList(TreeNodeCollection listOfTableNodes)
+        internal IList<ITable> buildTablesToCopyList(TreeNodeCollection listOfTableNodes)
         {
-            IList<Table> theList = new List<Table>();
+            IList<ITable> theList = new List<ITable>();
 
             foreach (TreeNode tableNode in listOfTableNodes)
             {
@@ -443,7 +446,9 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             {
                 resultado = (T)node.Tag;
             }
+#pragma warning disable S108 // Nested blocks of code should not be left empty
             catch { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 
             return resultado;
         }

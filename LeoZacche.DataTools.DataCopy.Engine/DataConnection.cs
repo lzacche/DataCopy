@@ -114,20 +114,40 @@ namespace LeoZacche.DataTools.DataCopy.Engine
 
             return columns;
         }
-        //public DataConnection Clone()
-        //{
-        //    var clone = new DataConnection
-        //    {
-        //        ConnectionType = this.ConnectionType,
-        //        Username = this.Username,
-        //        Password = this.Password,
-        //        DatabaseOrSchema = this.DatabaseOrSchema
-        //    };
+        public IList<DataColumn> GetAllColumns(string tablename)
+        {
+            var columns = this.RealConnection.GetAllColumns(tablename);
 
-        //    // os clones não vão compartilhar a mesma conexão, serão duas conexões distintas (uma para o objeto original outra para o clone), cada instancia com a sua
+            return columns;
+        }
+        public IList<IColumn> GetAllColumns_NEW(string tablename)
+        {
+            var columns = this.RealConnection.GetAllColumns_NEW(tablename);
 
-        //    return clone;
-        //}
+            return columns;
+        }
+
+        internal void CreateTable(ITable table)
+        {
+            /*
+            if (this._realConnection == null)
+                throw new Exception("Not Connected");
+            */
+
+            this._realConnection.CreateTable(table);
+        }
+        internal void EnsureTableStructure(ITable table)
+        {
+            /*
+            if (this._realConnection == null)
+                throw new Exception("Not Connected");
+            */
+
+            //this._realConnection.EnsureTableStructure(table);
+        }
+
+
+
 
         private IDatabaseConnection createConcreteConnection(ConnectionTypeEnum connectionType)
         {
@@ -165,6 +185,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             return theConn;
         }
 
+
         static Assembly LoadPlugin(string relativePath)
         {
             // Navigate up to the solution root
@@ -176,13 +197,24 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             //                    Path.GetDirectoryName(typeof(Program).Assembly.Location)))))));
 
             //string pluginLocation = Path.GetFullPath(Path.Combine(root, relativePath.Replace('\\', Path.DirectorySeparatorChar)));
-            string pluginLocation = $@"C:\lz\lz-super-tools\LeoZacche.DataTools.DataCopy\Plugins\{relativePath}";
+            var assemblyDir = AssemblyDirectory;
+            string pluginLocation = $@"{assemblyDir}\Plugins\{relativePath}";
+#if DEBUG
+            var solutionDir = assemblyDir;  //   DataCopy\LeoZacche.DataTools.DataCopy.WindowsApp\bin\Debug\NetCoreApp3.1
+            solutionDir = Path.GetDirectoryName(solutionDir); //   DataCopy\LeoZacche.DataTools.DataCopy.WindowsApp\bin\Debug\
+            solutionDir = Path.GetDirectoryName(solutionDir); //   DataCopy\LeoZacche.DataTools.DataCopy.WindowsApp\bin\
+            solutionDir = Path.GetDirectoryName(solutionDir); //   DataCopy\LeoZacche.DataTools.DataCopy.WindowsApp\
+            solutionDir = Path.GetDirectoryName(solutionDir); //   DataCopy\
+            pluginLocation = $@"{solutionDir}\Plugins\{relativePath}";
+#endif
 
 
             Console.WriteLine($"Loading commands from: {pluginLocation}");
             PluginLoadContext loadContext = new PluginLoadContext(pluginLocation);
             return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));
         }
+
+
         static IEnumerable<IDatabaseConnection> CreateConnections(Assembly assembly)
         {
             int count = 0;
@@ -208,6 +240,17 @@ namespace LeoZacche.DataTools.DataCopy.Engine
                 throw new ApplicationException(
                     $"Can't find any type which implements IDatabaseConnection in {assembly} from {assembly.Location}.\n" +
                     $"Available types: {availableTypes}");
+            }
+        }
+
+        private static string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
             }
         }
 

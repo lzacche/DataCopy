@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(TargetPath) $(SolutionDir)\Plugins\&#xD;&#xA;copy $(TargetDir)$(TargetName).deps.json $(SolutionDir)\Plugins\&#xD;&#xA;copy $(OutDir)System.Data.SqlClient.dll $(SolutionDir)\Plugins\&#xD;&#xA;xcopy $(OutDir)runtimes $(SolutionDir)\Plugins\ /s /e /y" />
+    <Exec Command="rem Copiando [$(TargetPath)] para [$(SolutionDir)\Plugins\]&#xD;&#xA;copy $(TargetPath) $(SolutionDir)\Plugins\&#xD;&#xA;&#xD;&#xA;rem Copiando [$(TargetDir)$(TargetName).deps.json] para [$(SolutionDir)\Plugins\]&#xD;&#xA;copy $(TargetDir)$(TargetName).deps.json $(SolutionDir)\Plugins\&#xD;&#xA;&#xD;&#xA;rem Copiando [$(OutDir)System.Data.SqlClient.dll] para [$(SolutionDir)\Plugins\]&#xD;&#xA;copy $(OutDir)System.Data.SqlClient.dll $(SolutionDir)\Plugins\&#xD;&#xA;&#xD;&#xA;xcopy $(OutDir)runtimes $(SolutionDir)\Plugins\ /s /e /y" />
   </Target>
 
 </Project>

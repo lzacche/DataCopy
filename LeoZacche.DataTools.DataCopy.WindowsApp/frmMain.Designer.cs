@@ -53,8 +53,17 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.grpExecucao = new System.Windows.Forms.GroupBox();
+            this.lblDetalhesContent = new System.Windows.Forms.Label();
+            this.lblDetalhes = new System.Windows.Forms.Label();
+            this.pbCurrentTable = new System.Windows.Forms.ProgressBar();
+            this.lblCurrentTable = new System.Windows.Forms.Label();
+            this.pbOverall = new System.Windows.Forms.ProgressBar();
+            this.lblOverall = new System.Windows.Forms.Label();
+            this.bwCopy = new System.ComponentModel.BackgroundWorker();
             this.mnuStrip.SuspendLayout();
             this.tabSteps.SuspendLayout();
+            this.grpExecucao.SuspendLayout();
             this.SuspendLayout();
             // 
             // mnuStrip
@@ -268,11 +277,92 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.tabPage5.Text = "Passo 5 - Execução";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
+            // grpExecucao
+            // 
+            this.grpExecucao.Controls.Add(this.lblDetalhesContent);
+            this.grpExecucao.Controls.Add(this.lblDetalhes);
+            this.grpExecucao.Controls.Add(this.pbCurrentTable);
+            this.grpExecucao.Controls.Add(this.lblCurrentTable);
+            this.grpExecucao.Controls.Add(this.pbOverall);
+            this.grpExecucao.Controls.Add(this.lblOverall);
+            this.grpExecucao.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.grpExecucao.Location = new System.Drawing.Point(0, 558);
+            this.grpExecucao.Name = "grpExecucao";
+            this.grpExecucao.Size = new System.Drawing.Size(994, 93);
+            this.grpExecucao.TabIndex = 8;
+            this.grpExecucao.TabStop = false;
+            // 
+            // lblDetalhesContent
+            // 
+            this.lblDetalhesContent.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lblDetalhesContent.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblDetalhesContent.Location = new System.Drawing.Point(120, 69);
+            this.lblDetalhesContent.Name = "lblDetalhesContent";
+            this.lblDetalhesContent.Size = new System.Drawing.Size(862, 21);
+            this.lblDetalhesContent.TabIndex = 5;
+            this.lblDetalhesContent.Text = "<detalhes>";
+            this.lblDetalhesContent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblDetalhes
+            // 
+            this.lblDetalhes.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lblDetalhes.Location = new System.Drawing.Point(62, 72);
+            this.lblDetalhes.Name = "lblDetalhes";
+            this.lblDetalhes.Size = new System.Drawing.Size(52, 15);
+            this.lblDetalhes.TabIndex = 4;
+            this.lblDetalhes.Text = "Detalhes";
+            this.lblDetalhes.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // pbCurrentTable
+            // 
+            this.pbCurrentTable.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.pbCurrentTable.Location = new System.Drawing.Point(120, 33);
+            this.pbCurrentTable.Name = "pbCurrentTable";
+            this.pbCurrentTable.Size = new System.Drawing.Size(862, 21);
+            this.pbCurrentTable.TabIndex = 3;
+            // 
+            // lblCurrentTable
+            // 
+            this.lblCurrentTable.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lblCurrentTable.Location = new System.Drawing.Point(6, 46);
+            this.lblCurrentTable.Name = "lblCurrentTable";
+            this.lblCurrentTable.Size = new System.Drawing.Size(108, 15);
+            this.lblCurrentTable.TabIndex = 2;
+            this.lblCurrentTable.Text = "<Nome da Tabela>";
+            this.lblCurrentTable.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // pbOverall
+            // 
+            this.pbOverall.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.pbOverall.Location = new System.Drawing.Point(120, 3);
+            this.pbOverall.Name = "pbOverall";
+            this.pbOverall.Size = new System.Drawing.Size(862, 21);
+            this.pbOverall.TabIndex = 1;
+            // 
+            // lblOverall
+            // 
+            this.lblOverall.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lblOverall.Location = new System.Drawing.Point(21, 16);
+            this.lblOverall.Name = "lblOverall";
+            this.lblOverall.Size = new System.Drawing.Size(93, 15);
+            this.lblOverall.TabIndex = 0;
+            this.lblOverall.Text = "Todo o Processo";
+            this.lblOverall.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // bwCopy
+            // 
+            this.bwCopy.WorkerReportsProgress = true;
+            this.bwCopy.WorkerSupportsCancellation = true;
+            this.bwCopy.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bwCopy_DoWork);
+            this.bwCopy.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bwCopy_ProgressChanged);
+            this.bwCopy.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bwCopy_RunWorkerCompleted);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(994, 651);
+            this.Controls.Add(this.grpExecucao);
             this.Controls.Add(this.tabSteps);
             this.Controls.Add(this.btnPasso5);
             this.Controls.Add(this.btnPasso4);
@@ -289,6 +379,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.mnuStrip.ResumeLayout(false);
             this.mnuStrip.PerformLayout();
             this.tabSteps.ResumeLayout(false);
+            this.grpExecucao.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -320,6 +411,15 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.TabPage tabPage5;
+        private System.Windows.Forms.GroupBox grpExecucao;
+        private System.Windows.Forms.Label lblDetalhes;
+        private System.Windows.Forms.Label Label2;
+        private System.Windows.Forms.ProgressBar pbCurrentTable;
+        private System.Windows.Forms.Label lblCurrentTable;
+        private System.Windows.Forms.ProgressBar pbOverall;
+        private System.Windows.Forms.Label lblOverall;
+        private System.Windows.Forms.Label lblDetalhesContent;
+        private System.ComponentModel.BackgroundWorker bwCopy;
     }
 }
 

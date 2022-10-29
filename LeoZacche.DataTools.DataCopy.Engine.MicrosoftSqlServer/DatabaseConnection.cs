@@ -1,10 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Text;
 using System.Data;
 using System.Data.SqlClient;
+using System.Collections.Generic;
 
-using LeoZacche.DataTools.DataCopy.Contracts;
 using LeoZacche.Utils;
+using LeoZacche.DataTools.DataCopy.Contracts;
+using LeoZacche.DataTools.DataCopy.Contracts.Extensions;
+using LeoZacche.DataTools.DataCopy.Contracts.SqlAnsiDataTypes;
+using LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.Extensions;
 
 namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer
 {
@@ -51,9 +55,9 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer
                     tmpConn.Open();
                     tmpConn.Close();
                 }
-                catch (Exception ex)
+                catch //(Exception ex)
                 {
-                    var m = ex.Message;
+                    //var m = ex.Message;
                     throw;
                 }
             }
@@ -161,7 +165,7 @@ where t.name = @tablename
                     colName = TypeUtil.ConvertTo<string>(dr["Name"]);
                     typename = TypeUtil.ConvertTo<string>(dr["DataType"]);
 
-                    colType = convertoToType(typename);
+                    colType = SqlTypeExtensions.ConvertoToType(typename);
 
                     col = new DataColumn(colName, colType);
                     lista.Add(col);
@@ -172,6 +176,100 @@ where t.name = @tablename
 
             return lista;
         }
+
+
+        public IList<IColumn> GetAllColumns_NEW(string tablename)
+        {
+            Column col;
+            int colOrder;
+            string colName, typename;
+            Type colType;
+
+            IList<IColumn> lista = new List<IColumn>();
+
+            var sql = @"
+select  c.ColOrder, c.Name, tp.Name as SqlServerDataType, c.Length, c.XPrec, c.XScale, c.IsNullable, idCol.Is_Identity, idCol.name, idCol.seed_value, idCol.increment_value, idCol.last_value
+from    sys.syscolumns c 
+        inner join sys.sysobjects t on t.id = c.id
+        inner join sys.types tp on tp.user_type_id = c.xtype
+        left  join sys.identity_columns idCol on t.id = idCol.object_id and idCol.column_id = c.colid
+where   t.name = @tablename
+";
+
+            using (var cmd = this._conn.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+
+                cmd.Parameters.Add(new SqlParameter("tablename", tablename));
+
+                var dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    // whatsApp de emergencia da Light: 21-99981-6059
+                    // protocolo da falta de luz: 2271244160 - 28/10/20222 20:29
+
+
+                    //colType = convertoToType(typename);
+                    var sqlTypeTitle = TypeUtil.ConvertTo<string>(dr["SqlServerDataType"]); 
+
+                    col = new Column();
+                    col.Ordinal = TypeUtil.ConvertTo<int>(dr["ColOrder"]);
+                    col.Name = TypeUtil.ConvertTo<string>(dr["Name"]);
+                    
+                    col.DataType = SqlTypeExtensions.ConvertoToType(sqlTypeTitle);
+                    //col.SqlType = TypeUtil.ConvertTo<Sql1992DataType>(sqlTypeTitle);
+                    //col.SqlType = Sql1992DataTypeExtensions.GetType(sqlTypeTitle);
+                    col.DatabaseSpecificDataType = sqlTypeTitle;
+                    col.AllowNull = TypeUtil.ConvertTo<bool>(dr["IsNullable"]);
+                    if (dr["Is_Identity"] == DBNull.Value)
+                    {
+                        col.IsAutoIncrement = false;
+                        // demais coluns de identity: setar nulo
+                    }
+                    else
+                    {
+                        col.IsAutoIncrement = true;
+                        // demais coluns de identity: preencher
+                    }
+                    
+                    //SqlType = this.SqlType,
+                    col.MaxLength = TypeUtil.ConvertTo<int>(dr["length"]);
+                    col.Precision = TypeUtil.ConvertTo<byte>(dr["xprec"]);
+                    col.Scale = TypeUtil.ConvertTo<byte>(dr["xscale"]);
+
+                    
+
+                        //Value = this.Value,
+                        //IsPartOfPrimaryKey
+
+                    /*
+                    col = new Column
+                    {
+                        Ordinal = TypeUtil.ConvertTo<int>(dr["ColOrder"]),
+                        Name = TypeUtil.ConvertTo<string>(dr["Name"]),
+                        //DataType = TypeUtil.ConvertTo<string>(dr["DataType"]),
+                        AllowNull = TypeUtil.ConvertTo<bool>(dr["IsNullable"]),
+                        IsAutoIncrement = TypeUtil.ConvertTo<bool>(dr["Is_Identity"]),
+                        //SqlType = this.SqlType,
+                        MaxLength = TypeUtil.ConvertTo<int>(dr["length"]),
+                        Precision = TypeUtil.ConvertTo<byte>(dr["xprec"]),
+                        Scale = TypeUtil.ConvertTo<byte>(dr["xscale"]),
+                        //Value = this.Value,
+                        //IsPartOfPrimaryKey
+                    };
+                    */
+                    lista.Add(col);
+                }
+
+                dr.Close();
+            }
+
+            return lista;
+        }
+        
+        
 
         public IList<DataColumn> GetPrimaryKeyColumns(string tablename)
         {
@@ -217,7 +315,7 @@ order by ic.key_ordinal
                     columnOrderInKey = TypeUtil.ConvertTo<int>(dr["ColumnOrderInKey"]);
                     typename = TypeUtil.ConvertTo<string>(dr["DataType"]);
 
-                    colType = convertoToType(typename);
+                    colType = SqlTypeExtensions.ConvertoToType(typename);
 
                     col = new DataColumn(columnName, colType);
                     lista.Add(col);
@@ -233,6 +331,46 @@ order by ic.key_ordinal
         {
             this._conn.ChangeDatabase(newDatabaseOrSchema);
         }
+
+        public void CreateTable(ITable table)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"create table {table.Name} ( ");
+
+            foreach (var col in table.Columns)
+            {
+                //if (col.SqlType == Sql1992DataType.NaoDefinido)
+                //    throw new Exception("Not Defined");
+
+                sb.Append($"    ");
+                sb.Append(col.Name);
+                sb.Append(" ");
+                sb.Append(col.DatabaseSpecificDataType);
+                sb.Append(" ");
+                sb.Append(col.AllowNull ? "null" : "not null");
+                sb.Append(" ");
+                sb.Append(col.IsAutoIncrement ? "identity" : ""); // TODO: seed e step
+
+                sb.AppendLine(",");
+            }
+
+            sb.AppendLine($")");
+
+            using (var cmd = this._conn.CreateCommand())
+            {
+                var sql = sb.ToString();
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void EnsureTableStructure(ITable table)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
 
@@ -257,68 +395,7 @@ order by ic.key_ordinal
             return str;
         }
 
-        internal Type convertoToType(string databaseType)
-        {
-            Type resultado = null;
-            int? precision = null, 
-                 scale = null;
-
-            var parentesesPosition = databaseType.IndexOf('(');
-            var temParenteses = parentesesPosition >= 0;
-
-            var typeTitle = temParenteses ? databaseType.Substring(0, parentesesPosition).Trim() : databaseType;
-            if (temParenteses)
-            {
-                var length = databaseType.Substring(parentesesPosition).Replace("(", "").Replace(")", "");
-                var partes = length.Split(new char[] { ',' });
-                precision = TypeUtil.ConvertTo<int?>(partes[0]);
-                if (partes.Length > 1)
-                    scale = TypeUtil.ConvertTo<int?>(partes[1]);
-            }
-
-            switch (typeTitle)
-            {
-
-                case "smallint":
-                    resultado = typeof(short);
-                    break;
-
-                case "int":
-                    resultado = typeof(int);
-                    break;
-
-                case "bigint":
-                    resultado = typeof(long);
-                    break;
-
-                case "date":
-                case "datetime":
-                    resultado = typeof(DateTime);
-                    break;
-
-                case "varchar":
-                    resultado = typeof(string);
-                    break;
-
-                case "numeric":
-                    if (scale != null && scale > 0)
-                        resultado = typeof(decimal);
-                    else
-                    {
-                        if (precision != null && precision > 5)
-                            resultado = typeof(long);
-                        else
-                            resultado = typeof(int);
-                    }
-                    break;
-
-
-                default:
-                    throw new Exception($"Não sei como tratar o tipo '{databaseType}'.");
-            }
-
-            return resultado;
-        }
+        
 
     }
 }

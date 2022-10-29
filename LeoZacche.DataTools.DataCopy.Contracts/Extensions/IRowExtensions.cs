@@ -4,11 +4,12 @@ using System.Collections.Generic;
 
 using LeoZacche.Utils;
 
-namespace LeoZacche.DataTools.DataCopy.Engine.Extensions
+
+namespace LeoZacche.DataTools.DataCopy.Contracts.Extensions
 {
-    public static class RowExtensions
+    public static class IRowExtensions
     {
-        public static void CloneFrom(this IList<Row> listTo, IList<Row> listfrom)
+        public static void CloneFrom(this IList<IRow> listTo, IList<IRow> listfrom)
         {
             listTo.Clear();
 
@@ -19,7 +20,6 @@ namespace LeoZacche.DataTools.DataCopy.Engine.Extensions
 
                 listTo.Add(newRow);
             }
-
         }
     }
 }

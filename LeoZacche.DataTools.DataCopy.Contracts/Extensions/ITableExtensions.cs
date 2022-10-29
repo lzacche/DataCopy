@@ -2,11 +2,13 @@
 using System.Text;
 using System.Collections.Generic;
 
-namespace LeoZacche.DataTools.DataCopy.Engine.Extensions
+using LeoZacche.DataTools.DataCopy.Contracts;
+
+namespace LeoZacche.DataTools.DataCopy.Contracts.Extensions
 {
-    public static class TableExtensions
+    public static class ITableExtensions
     {
-        public static void CloneFrom(this IList<Table> listTo, IList<Table> listfrom)
+        public static void CloneFrom(this IList<ITable> listTo, IList<ITable> listfrom)
         {
             listTo.Clear();
 

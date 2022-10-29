@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using LeoZacche.DataTools.DataCopy.Engine;
-using LeoZacche.DataTools.DataCopy.Engine.Extensions;
+using LeoZacche.DataTools.DataCopy.Contracts.Extensions;
+using static LeoZacche.DataTools.DataCopy.Engine.DataCopySession;
 
 namespace LeoZacche.DataTools.DataCopy.WindowsApp
 {
@@ -29,6 +30,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private void frmMain_Load(object sender, EventArgs e)
         {
             createNew();
+            //grpExecucao.Visible = false;
         }
 
         private void frmMain_Resize(object sender, EventArgs e)
@@ -71,8 +73,40 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             btnPasso5.Left = btnPasso4.Right + umaLarguraSeparador;
             btnPasso5.Width = larguraBotao;
+
+
+            int margemHorizontal = 10;
+            lblOverall.Left = margemHorizontal;
+            lblCurrentTable.Left = margemHorizontal;
+            lblDetalhes.Left = margemHorizontal;
+
+            int margemVertical = 4;
+            pbOverall.Top = 17 + margemVertical;
+            pbCurrentTable.Top = pbOverall.Bottom + margemVertical;
+            lblDetalhesContent.Top = pbCurrentTable.Bottom + margemVertical;
+
+
+            grpExecucao.Height = 105;
+            int largulaLabels = 120;
+
+            lblOverall.Width = largulaLabels;
+            lblCurrentTable.Width = largulaLabels;
+            lblDetalhes.Width = largulaLabels;
+
+            lblOverall.Height = pbOverall.Height;
+            lblCurrentTable.Height = pbCurrentTable.Height;
+            lblDetalhes.Height = lblDetalhesContent.Height;
+
+            pbOverall.Left = margemHorizontal + largulaLabels + margemHorizontal;
+            pbCurrentTable.Left = pbOverall.Left;
+            lblDetalhesContent.Left = pbCurrentTable.Left;
+
+            pbOverall.Width = grpExecucao.ClientSize.Width - pbOverall.Left - margemHorizontal;
+            pbCurrentTable.Width = pbOverall.Width;
+            lblDetalhesContent.Width = pbCurrentTable.Width;
+
         }
-        
+
         #endregion
 
         #region Eventos do Menu Arquivo
@@ -94,7 +128,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             frmConnEditor.Dispose();
 
-            this.btnPasso2.Enabled = this.theSession.ConnectionSource.State == ConnectionState.Open;
+            enableButtons();
         }
 
         private void btnPasso2_Click(object sender, EventArgs e)
@@ -117,14 +151,113 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             frmRootsEditor.Dispose();
 
-            bool anyTableSelected = this.theSession.TablesToCopy.Any();
-            btnPasso3.Enabled = anyTableSelected;
-            btnPasso4.Enabled = anyTableSelected;
-            btnPasso5.Enabled = anyTableSelected;
+            enableButtons();
+        }
+
+        private void btnPasso5_Click(object sender, EventArgs e)
+        {
+            this.UseWaitCursor = true;
+
+            this.btnPasso1.Enabled = false;
+            this.btnPasso2.Enabled = false;
+            this.btnPasso3.Enabled = false;
+            this.btnPasso4.Enabled = false;
+            this.btnPasso5.Enabled = false;
+
+            grpExecucao.Visible = true;
+            if (!bwCopy.IsBusy)
+                bwCopy.RunWorkerAsync();
         }
 
         #endregion
 
+        private void bwCopy_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+            e.Result = executeCopy(worker);
+        }
+        private void bwCopy_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if (e.UserState != null)
+            {
+                var uiState = (ProgressState)e.UserState;
+
+                if (uiState.OverallProgressMinimum != null)
+                    this.pbOverall.Minimum = uiState.OverallProgressMinimum.Value;
+
+                if (uiState.OverallProgressMaximum != null)
+                    this.pbOverall.Maximum = uiState.OverallProgressMaximum.Value;
+
+                if (uiState.OverallProgressValue != null)
+                    this.pbOverall.Value = uiState.OverallProgressValue.Value;
+
+                if (uiState.CurrentTableProgressMinimum != null)
+                    this.pbCurrentTable.Minimum = uiState.CurrentTableProgressMinimum.Value;
+
+                if (uiState.CurrentTableProgressMaximum != null)
+                    this.pbCurrentTable.Maximum = uiState.CurrentTableProgressMaximum.Value;
+
+                if (uiState.CurrentTableProgressValue != null)
+                    this.pbCurrentTable.Value = uiState.CurrentTableProgressValue.Value;
+
+                if (uiState.CurrentTableName != null)
+                    this.lblCurrentTable.Text = uiState.CurrentTableName;
+
+                if (uiState.Details != null)
+                    this.lblDetalhesContent.Text = uiState.Details;
+
+                this.Refresh();
+            }
+        }
+
+        private void bwCopy_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            enableButtons();
+            //grpExecucao.Visible = false;
+            this.UseWaitCursor = false;
+        }
+
+        #region Eventos da Sessão de Cópia
+
+        private void TheSession_OnTableCopyStarted(object sender, TableCopyEventArgs e, BackgroundWorker worker)
+        {
+            var ui = new ProgressState
+            {
+                Details = "",
+                CurrentTableName = e.Table.Name,
+                CurrentTableProgressMinimum = 0,
+                CurrentTableProgressMaximum = e.Table.RowsToCopy.Count,
+                CurrentTableProgressValue = 0,
+            };
+            worker.ReportProgress(1, ui);
+        }
+        private void TheSession_OnTableCopyEnded(object sender, TableCopyEventArgs e, BackgroundWorker worker)
+        {
+            var ui = new ProgressState
+            {
+                Details = "",
+                OverallProgressValue = e.ThisTableNumber,
+            };
+            worker.ReportProgress(1, ui);
+        }
+        private void TheSession_OnRowCopyStarted(object sender, RowCopyEventArgs e, BackgroundWorker worker)
+        {
+            var ui = new ProgressState
+            {
+                Details = $"Copiando o registro {e.ThisRowNumber}...",
+            };
+            worker.ReportProgress(1, ui);
+        }
+        private void TheSession_OnRowCopyEnded(object sender, RowCopyEventArgs e, BackgroundWorker worker)
+        {
+            var ui = new ProgressState
+            {
+                Details = "",
+                CurrentTableProgressValue = e.ThisRowNumber,
+            };
+            worker.ReportProgress(1, ui);
+        }
+        #endregion
 
         private void createNew()
         {
@@ -152,37 +285,86 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             //this.formRoots = new frmSelecaoRoots();
             //this.formRoots.Show();
 
-            btnPasso5.Enabled = false;
-            btnPasso4.Enabled = false;
-            btnPasso3.Enabled = false;
-            btnPasso2.Enabled = false;
-            btnPasso1.Enabled = true;
+            enableButtons();
         }
 
-        private void btnPasso5_Click(object sender, EventArgs e)
+        private void enableButtons()
         {
+            bool sourceConnIsOpen = this.theSession.ConnectionSource.State == ConnectionState.Open;
+            bool anyTableSelected = this.theSession.TablesToCopy.Any();
+
+            this.btnPasso1.Enabled = true;
+            this.btnPasso2.Enabled = sourceConnIsOpen;
+            this.btnPasso3.Enabled = anyTableSelected;
+            this.btnPasso4.Enabled = anyTableSelected;
+            this.btnPasso5.Enabled = anyTableSelected;
+        }
+
+        private bool executeCopy(BackgroundWorker worker)
+        {
+            bool resultado = true;
+            TableCopyEventHandler funcTableStarted = (sender, args) => TheSession_OnTableCopyStarted(sender, args, worker);
+            TableCopyEventHandler funcTableEnded = (sender, args) => TheSession_OnTableCopyEnded(sender, args, worker);
+            RowCopyEventHandler funcRowStarted = (sender, args) => TheSession_OnRowCopyStarted(sender, args, worker);
+            RowCopyEventHandler funcRowEnded = (sender, args) => TheSession_OnRowCopyEnded(sender, args, worker);
+
             try
             {
-                this.UseWaitCursor = true;
+                this.theSession.OnTableCopyStarted += funcTableStarted;
+                this.theSession.OnTableCopyEnded += funcTableEnded;
+                this.theSession.OnRowCopyStarted += funcRowStarted;
+                this.theSession.OnRowCopyEnded += funcRowEnded;
 
-                this.theSession.OnPreCheckStarted += TheSession_OnPreCheckStarted;
+                var ui = new ProgressState
+                {
+                    Details = "",
+                    CurrentTableName = "",
+                    OverallProgressMinimum = 0,
+                    OverallProgressMaximum = this.theSession.TablesToCopy.Count,
+                    OverallProgressValue = 0,
+                    CurrentTableProgressMinimum = 0,
+                    CurrentTableProgressMaximum = 0,
+                    CurrentTableProgressValue = 0,
+                };
+                worker.ReportProgress(1, ui);
 
-
+                this.theSession.ExecuteCopy();
+                resultado = true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Executing...", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                resultado = false;
             }
             finally
             {
-                this.theSession.OnPreCheckStarted -= TheSession_OnPreCheckStarted;
-                this.UseWaitCursor = false;
+                this.theSession.OnTableCopyStarted -= funcTableStarted;
+                this.theSession.OnTableCopyEnded -= funcTableEnded;
+                this.theSession.OnRowCopyStarted -= funcRowStarted;
+                this.theSession.OnRowCopyEnded -= funcRowEnded;
             }
+            return resultado;
         }
 
-        private void TheSession_OnPreCheckStarted(object sender, EventArgs e)
+
+
+        private sealed class ProgressState
         {
-            throw new NotImplementedException();
+            public int? OverallProgressMinimum { get; set; }
+            public int? OverallProgressMaximum { get; set; }
+            public int? OverallProgressValue { get; set; }
+            public int? CurrentTableProgressMinimum { get; set; }
+            public int? CurrentTableProgressMaximum { get; set; }
+            public int? CurrentTableProgressValue { get; set; }
+            public string CurrentTableName { get; set; }
+            public string Details { get; set; }
+            
+            public ProgressState()
+            {
+                this.CurrentTableName = null;
+                this.Details = null;
+            }
         }
     }
+
 }

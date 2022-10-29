@@ -17,10 +17,16 @@ namespace LeoZacche.DataTools.DataCopy.Contracts
         void Close();
         void ChangeDatabaseOrSchema(string newDatabaseOrSchema);
 
+        void CreateTable(ITable table);
+        void EnsureTableStructure(ITable table);
+
+
         IList<string> GetDatabaseNames();
         IList<string> GetAllTableNames();
         IList<DataColumn> GetAllColumns(string tablename);
         IList<DataColumn> GetPrimaryKeyColumns(string tablename);
 
+
+        IList<IColumn> GetAllColumns_NEW(string tablename);
     }
 }

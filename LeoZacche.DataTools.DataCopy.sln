@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.31911.196
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.DataTools.DataCopy.WindowsApp", "LeoZacche.DataTools.DataCopy.WindowsApp\LeoZacche.DataTools.DataCopy.WindowsApp.csproj", "{1A11B9B9-6CC1-400E-98D7-A29F23F2EB72}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8C627C4A-D580-49D4-96BC-FEC5786EA952} = {8C627C4A-D580-49D4-96BC-FEC5786EA952}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.DataTools.DataCopy.Engine", "LeoZacche.DataTools.DataCopy.Engine\LeoZacche.DataTools.DataCopy.Engine.csproj", "{217BDDB4-5179-410E-8D0B-97F0C0604A7E}"
 EndProject
@@ -17,9 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.Utils", "LeoZacch
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.Utils.UnitTests", "LeoZacche.UtilsTests\LeoZacche.Utils.UnitTests.csproj", "{44F042C2-3BA3-4E58-90C1-74BC994F329C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests\LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests.csproj", "{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests\LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests.csproj", "{9C0A7115-AF7B-4DE9-AB3B-7E845980FB0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeoZacche.DataTools.DataCopy.Engine.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.UnitTests\LeoZacche.DataTools.DataCopy.Engine.UnitTests.csproj", "{D0506532-C41B-43C7-9BBD-DB1E00772E8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeoZacche.DataTools.DataCopy.Engine.UnitTests", "LeoZacche.DataTools.DataCopy.Engine.UnitTests\LeoZacche.DataTools.DataCopy.Engine.UnitTests.csproj", "{D0506532-C41B-43C7-9BBD-DB1E00772E8B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{B3CCEEF1-D87A-4515-9FAE-C73ACC6E77C7}"
 EndProject

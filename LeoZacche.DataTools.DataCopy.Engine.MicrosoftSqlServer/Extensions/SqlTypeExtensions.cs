@@ -121,5 +121,26 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.Extensions
             return resultado;
         }
 
+        public static bool TypeNeedsLenght(string SqlServerSpecificDataType)
+        {
+            bool resultado = false;
+            switch (SqlServerSpecificDataType.ToLower())
+            {
+                case "char":
+                case "varchar":
+                case "nchar":
+                case "nvarchar":
+                    resultado = true;
+                    break;
+
+                default:
+                    resultado = false;
+                    break;
+            }
+
+            return resultado;
+        }
+
+        //public static bool 
     }
 }

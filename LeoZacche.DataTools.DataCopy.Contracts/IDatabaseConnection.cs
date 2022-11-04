@@ -18,13 +18,22 @@ namespace LeoZacche.DataTools.DataCopy.Contracts
         void ChangeDatabaseOrSchema(string newDatabaseOrSchema);
 
         void CreateTable(ITable table);
-        void EnsureTableStructure(ITable table);
+        void EnsureTableColumns(ITable tableAsItMustBe, IList<IColumn> actualColsOnDestination, out bool tableWasChanged);
+
+        void EnsureTablePrimaryKey(ITable tableAsItMustBe, IList<IColumn> actualColsOnDestination);
+        void DropConstraint(string tableName, string constraintName);
+        void CreatePrimaryConstraint(string tableName, string constraintName, IList<string> columns);
+
+        void EnsureTableCheckConstraints(ITable tableAsItMustBe);
+        void EnsureTableForeignKeys(ITable tableAsItMustBe);
 
 
         IList<string> GetDatabaseNames();
         IList<string> GetAllTableNames();
         IList<DataColumn> GetAllColumns(string tablename);
+        string GetPrimaryConstraintName(string tablename);
         IList<DataColumn> GetPrimaryKeyColumns(string tablename);
+
 
 
         IList<IColumn> GetAllColumns_NEW(string tablename);

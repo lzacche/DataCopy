@@ -9,5 +9,6 @@ namespace LeoZacche.DataTools.DataCopy.Contracts
         string Name { get; set; }
         public IList<IRow> RowsToCopy { get; }
         public IList<IColumn> Columns { get; }
+        public string PrimaryKeyConstraintName { get; set; }
     }
 }

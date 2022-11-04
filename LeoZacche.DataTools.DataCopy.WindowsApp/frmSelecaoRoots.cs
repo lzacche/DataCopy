@@ -275,7 +275,9 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             {
                 nodekey = $"{tablename}";
                 nodeText = $"{tablename}";
+                var pkName = getPkName(tablename);
                 tableNode = this.tvwRegistros.Nodes.Add(nodekey, nodeText);
+                tableNode.Tag = pkName;
             }
 
             var newRowNumber = tableNode.Nodes.Count + 1;
@@ -315,9 +317,21 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             throw new Exception("Encontrado mais um nó com a mesma chave!!!");
         }
+        private string getPkName(string tablename)
+        {
+            var list = this.theConnection.GetPrimaryConstraintName(tablename);
+
+            return list;
+        }
         private IList<DataColumn> getPkColumns(string tablename)
         {
             var list = this.theConnection.GetPrimaryKeyColumns(tablename);
+
+            return list;
+        }
+        private IList<IColumn> getAllColumns(string tablename)
+        {
+            var list = this.theConnection.GetAllColumns_NEW(tablename);
 
             return list;
         }
@@ -413,8 +427,9 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             foreach (TreeNode tableNode in listOfTableNodes)
             {
-                var tableToCopy = new Table() { Name = tableNode.Text };
+                var tableToCopy = new Table() { Name = tableNode.Text, PrimaryKeyConstraintName = (string)tableNode.Tag };
 
+                // assembling a list of rows tro copy
                 foreach (TreeNode rowNode in tableNode.Nodes)
                 {
                     var row = new Row();
@@ -429,6 +444,11 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
                     tableToCopy.RowsToCopy.Add(row);
                 }
+
+                // loading the table definition
+                var loadedColumns = getAllColumns(tableToCopy.Name);
+                tableToCopy.Columns.CloneFrom(loadedColumns);
+
 
                 theList.Add(tableToCopy);
             }

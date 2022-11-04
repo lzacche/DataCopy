@@ -108,6 +108,12 @@ namespace LeoZacche.DataTools.DataCopy.Engine
 
             return this._tables;
         }
+        public string GetPrimaryConstraintName(string tablename)
+        {
+            var pkName = this.RealConnection.GetPrimaryConstraintName(tablename);
+
+            return pkName;
+        }
         public IList<DataColumn> GetPrimaryKeyColumns(string tablename)
         {
             var columns = this.RealConnection.GetPrimaryKeyColumns(tablename);
@@ -129,21 +135,24 @@ namespace LeoZacche.DataTools.DataCopy.Engine
 
         internal void CreateTable(ITable table)
         {
-            /*
-            if (this._realConnection == null)
-                throw new Exception("Not Connected");
-            */
-
             this._realConnection.CreateTable(table);
-        }
-        internal void EnsureTableStructure(ITable table)
-        {
-            /*
-            if (this._realConnection == null)
-                throw new Exception("Not Connected");
-            */
 
-            //this._realConnection.EnsureTableStructure(table);
+            var cols = table.Columns.Where(c => c.IsPartOfPrimaryKey).Select(c => c.Name).ToList();
+            this._realConnection.CreatePrimaryConstraint(table.Name, table.PrimaryKeyConstraintName, cols);
+        }
+        internal void EnsureTableStructure(ITable tableAsItMustBe)
+        {
+            var actualColsOnDestination = GetAllColumns_NEW(tableAsItMustBe.Name);
+            bool tableWasChanged;
+
+            this._realConnection.EnsureTableColumns(tableAsItMustBe, actualColsOnDestination, out tableWasChanged);
+            if (tableWasChanged)
+                actualColsOnDestination = GetAllColumns_NEW(tableAsItMustBe.Name);
+
+            this._realConnection.EnsureTablePrimaryKey(tableAsItMustBe, actualColsOnDestination);
+
+            //this._realConnection.EnsureTableCheckConstraints();
+            //this._realConnection.EnsureTableForeignKeys();
         }
 
 

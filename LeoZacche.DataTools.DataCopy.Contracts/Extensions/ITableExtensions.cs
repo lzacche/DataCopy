@@ -14,8 +14,13 @@ namespace LeoZacche.DataTools.DataCopy.Contracts.Extensions
 
             foreach(var fromTable in listfrom)
             {
-                var newTable = new Table() { Name = fromTable.Name };
+                var newTable = new Table()
+                {
+                    Name = fromTable.Name,
+                    PrimaryKeyConstraintName = fromTable.PrimaryKeyConstraintName,
+                };
                 newTable.RowsToCopy.CloneFrom(fromTable.RowsToCopy);
+                newTable.Columns.CloneFrom(fromTable.Columns);
 
                 listTo.Add(newTable);
             }

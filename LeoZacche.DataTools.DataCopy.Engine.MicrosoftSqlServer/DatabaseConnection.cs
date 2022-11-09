@@ -130,6 +130,10 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer
             return lista;
         }
 
+
+
+
+
         public IList<DataColumn> GetAllColumns(string tablename)
         {
             DataColumn col;
@@ -183,15 +187,15 @@ where t.name = @tablename
 
         public IList<IColumn> GetAllColumns_NEW(string tablename)
         {
-            Column col;
-            int colOrder;
-            string colName, typename;
-            Type colType;
+            IColumn col;
+            //int colOrder;
+            //string colName, typename;
+            //Type colType;
 
             IList<IColumn> lista = new List<IColumn>();
 
             var sql = @"
-select  c.ColOrder, c.Name, tp.Name as SqlServerDataType, c.Length, c.XPrec, c.XScale, c.IsNullable, 
+select  t.name as TableName, c.ColOrder, c.Name, tp.Name as SqlServerDataType, c.Length, c.XPrec, c.XScale, c.IsNullable, 
         idCol.Is_Identity, case when ic.column_id is null then 'N' else 'Y' end as IsPartOfPrimaryKey,
         idCol.name, idCol.seed_value, idCol.increment_value, idCol.last_value
 from    sys.syscolumns c 
@@ -220,32 +224,7 @@ where   t.name = @tablename
 
 
                     //colType = convertoToType(typename);
-                    var sqlTypeTitle = TypeUtil.ConvertTo<string>(dr["SqlServerDataType"]);
-
-                    col = new Column();
-                    col.Ordinal = TypeUtil.ConvertTo<int>(dr["ColOrder"]);
-                    col.Name = TypeUtil.ConvertTo<string>(dr["Name"]);
-
-                    col.DataType = SqlTypeExtensions.ConvertoToType(sqlTypeTitle);
-                    //col.SqlType = TypeUtil.ConvertTo<Sql1992DataType>(sqlTypeTitle);
-                    //col.SqlType = Sql1992DataTypeExtensions.GetType(sqlTypeTitle);
-                    col.DatabaseSpecificDataType = sqlTypeTitle;
-                    col.AllowNull = TypeUtil.ConvertTo<bool>(dr["IsNullable"]);
-                    if (dr["Is_Identity"] == DBNull.Value)
-                    {
-                        col.IsAutoIncrement = false;
-                        // demais coluns de identity: setar nulo
-                    }
-                    else
-                    {
-                        col.IsAutoIncrement = true;
-                        // demais coluns de identity: preencher
-                    }
-                    col.IsPartOfPrimaryKey = TypeUtil.ConvertTo<string>(dr["IsPartOfPrimaryKey"]) == "Y";
-                    //SqlType = this.SqlType,
-                    col.MaxLength = TypeUtil.ConvertTo<int>(dr["length"]);
-                    col.Precision = TypeUtil.ConvertTo<byte>(dr["xprec"]);
-                    col.Scale = TypeUtil.ConvertTo<byte>(dr["xscale"]);
+                    col = extractColumnFromDataReader(dr);
 
 
 
@@ -277,8 +256,40 @@ where   t.name = @tablename
             return lista;
         }
 
+        private IColumn extractColumnFromDataReader(SqlDataReader dr)
+        {
+            Column col;
+            var sqlTypeTitle = TypeUtil.ConvertTo<string>(dr["SqlServerDataType"]);
+
+            col = new Column();
+            col.Ordinal = TypeUtil.ConvertTo<int>(dr["ColOrder"]);
+            col.Name = TypeUtil.ConvertTo<string>(dr["Name"]);
+
+            col.DataType = SqlTypeExtensions.ConvertoToType(sqlTypeTitle);
+            //col.SqlType = TypeUtil.ConvertTo<Sql1992DataType>(sqlTypeTitle);
+            //col.SqlType = Sql1992DataTypeExtensions.GetType(sqlTypeTitle);
+            col.DatabaseSpecificDataType = sqlTypeTitle;
+            col.AllowNull = TypeUtil.ConvertTo<bool>(dr["IsNullable"]);
+            if (dr["Is_Identity"] == DBNull.Value)
+            {
+                col.IsAutoIncrement = false;
+                // demais coluns de identity: setar nulo
+            }
+            else
+            {
+                col.IsAutoIncrement = true;
+                // demais coluns de identity: preencher
+            }
+            col.IsPartOfPrimaryKey = TypeUtil.ConvertTo<string>(dr["IsPartOfPrimaryKey"]) == "Y";
+            //SqlType = this.SqlType,
+            col.MaxLength = TypeUtil.ConvertTo<int>(dr["length"]);
+            col.Precision = TypeUtil.ConvertTo<byte>(dr["xprec"]);
+            col.Scale = TypeUtil.ConvertTo<byte>(dr["xscale"]);
+            return col;
+        }
 
 
+        /*
         public string GetPrimaryConstraintName(string tablename)
         {
             string tableName = null, primaryKeyName = null;
@@ -368,12 +379,116 @@ order by ic.key_ordinal
 
             return lista;
         }
+        */
+        public IConstraintPrimaryKey GetPrimaryKey(string tablename)
+        {
+            IConstraintPrimaryKey thePrimaryKey = new ConstraintPrimaryKey();
+            //DataColumn col;
+            IColumn col;
+            int columnOrderInKey;
+            //string tableName, primaryKeyName, columnName, typename;
+            string primaryKeyName;
+            Type colType;
+
+            IList<DataColumn> lista = new List<DataColumn>();
+
+            var sql2 = @"
+select  t.name as TableName, pk.name as PrimaryKeyName, ic.key_ordinal as ColumnOrderInKey, c.name as ColumnName,
+        case when c.scale is null then concat(tp.name, ' (', sc.length, ')')
+             when sc.xprec <> tp.precision and sc.xscale = tp.scale then concat(tp.name, ' (', sc.xprec, ')')
+             when sc.xprec <> tp.precision and sc.xscale <> tp.scale then concat(tp.name, ' (', sc.xprec, ',', sc.xscale, ')')
+             else concat(tp.name, '')
+        end as DataType
+from    sys.key_constraints pk
+        inner join sys.tables t on t.object_id = pk.parent_object_id
+        inner join sys.indexes i on i.name = pk.name
+        inner join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id
+        inner join sys.columns c on c.object_id = ic.object_id and c.column_id = ic.column_id
+        inner join sys.syscolumns sc on sc.id = c.object_id and sc.colid = c.column_id 
+        inner join sys.types tp on tp.user_type_id = sc.xtype
+where   pk.type = 'PK' and 
+        t.name = @tablename
+order by ic.key_ordinal
+";
+            var sql = @"
+select  t.name as TableName, c.ColOrder, c.Name, tp.Name as SqlServerDataType, c.Length, c.XPrec, c.XScale, c.IsNullable, 
+        idCol.Is_Identity, case when ic.column_id is null then 'N' else 'Y' end as IsPartOfPrimaryKey,
+        idCol.name, idCol.seed_value, idCol.increment_value, idCol.last_value
+        , pk.name as PrimaryKeyName, ic.key_ordinal as ColumnOrderInKey
+from    sys.syscolumns c
+        inner join sys.sysobjects t on t.id = c.id
+        inner join sys.types tp on tp.user_type_id = c.xtype
+        left  join sys.identity_columns idCol on t.id = idCol.object_id and idCol.column_id = c.colid
+        inner join sys.key_constraints pk on pk.type = 'PK' and pk.parent_object_id = t.id
+        inner join sys.indexes i on i.name = pk.name
+        inner join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id and ic.column_id = c.colid
+where   pk.type = 'PK' and 
+        t.name = @tablename
+order by ic.key_ordinal
+";
+            using (var cmd = this._conn.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+
+                cmd.Parameters.Add(new SqlParameter("tablename", tablename));
+
+                var dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    //tableName = TypeUtil.ConvertTo<string>(dr["TableName"]);
+                    primaryKeyName = TypeUtil.ConvertTo<string>(dr["PrimaryKeyName"]);
+                    //columnName = TypeUtil.ConvertTo<string>(dr["ColumnName"]);
+                    //columnOrderInKey = TypeUtil.ConvertTo<int>(dr["ColumnOrderInKey"]);
+                    //typename = TypeUtil.ConvertTo<string>(dr["DataType"]);
+
+                    //colType = SqlTypeExtensions.ConvertoToType(typename);
+
+                    if (thePrimaryKey.ConstraintName == null)
+                    {
+                        thePrimaryKey.ConstraintName = primaryKeyName;
+                        thePrimaryKey.TableName = tablename;
+                    }
+
+                    col = extractColumnFromDataReader(dr);
+                    thePrimaryKey.Columns.Add(col);
+
+
+
+                    //col = new DataColumn(columnName, colType);
+                    //lista.Add(col);
+                }
+
+                dr.Close();
+            }
+
+            return thePrimaryKey;
+        }
+
 
         public void ChangeDatabaseOrSchema(string newDatabaseOrSchema)
         {
             this._conn.ChangeDatabase(newDatabaseOrSchema);
         }
 
+        public ITable GetTable(string tablename, bool includePrimaryKey)
+        {
+            ITable theTable = new Table() { Name = tablename };
+
+            var cols = this.GetAllColumns_NEW(tablename);
+            theTable.Columns.CloneFrom(cols);
+
+            if (includePrimaryKey)
+            {
+                var loadedPk = this.GetPrimaryKey(tablename);
+                theTable.PrimaryKey.ConstraintName = loadedPk.ConstraintName;
+                theTable.PrimaryKey.TableName = tablename;
+                theTable.PrimaryKey.Columns.CloneFrom(loadedPk.Columns);
+            }
+
+            return theTable;
+        }
         public void CreateTable(ITable table)
         {
             var sb = new StringBuilder();
@@ -389,6 +504,14 @@ order by ic.key_ordinal
                 sb.Append(col.Name);
                 sb.Append(" ");
                 sb.Append(col.DatabaseSpecificDataType);
+
+                if (SqlTypeExtensions.TypeNeedsLenght(col.DatabaseSpecificDataType))
+                {
+                    sb.Append("(");
+                    sb.Append(col.MaxLength);
+                    sb.Append(")");
+                }
+                
                 sb.Append(" ");
                 sb.Append(col.AllowNull ? "null" : "not null");
                 sb.Append(" ");
@@ -399,15 +522,9 @@ order by ic.key_ordinal
 
             sb.AppendLine($")");
 
-            using (var cmd = this._conn.CreateCommand())
-            {
-                var sql = sb.ToString();
-                cmd.CommandText = sql;
-                cmd.CommandType = CommandType.Text;
-                cmd.ExecuteNonQuery();
-            }
+            var sql = sb.ToString();
+            executeNonQuery(sql);
         }
-
         public void EnsureTableColumns(ITable tableAsItMustBe, IList<IColumn> actualColsOnDestination, out bool tableWasChanged)
         {
             tableWasChanged = false;
@@ -443,95 +560,97 @@ order by ic.key_ordinal
                 tableWasChanged = true;
             }
         }
-        public void EnsureTablePrimaryKey(ITable tableAsItMustBe, IList<IColumn> actualColsOnDestination)
-        {
-            var pkColsMustBe = tableAsItMustBe.Columns.Where(c => c.IsPartOfPrimaryKey).ToList();
-            var pkColsActual = actualColsOnDestination.Where(c => c.IsPartOfPrimaryKey).ToList();
-            bool pkMacth;
+        
 
-            // both collections must have same amount of elements and all names must mutch. There cannot be not even one element more on either side.
-            if (pkColsMustBe.Count != pkColsActual.Count)
-                pkMacth = false;
-            else
-            {
-                var allNamesOnMustBeExistsOnActual = pkColsMustBe.Any(c => pkColsActual.Exists(d => d.Name == c.Name));
-                var allNamesOnActualExistsOnMustBe = pkColsActual.Any(c => pkColsMustBe.Exists(d => d.Name == c.Name));
-                pkMacth = allNamesOnMustBeExistsOnActual && allNamesOnActualExistsOnMustBe;
-            }
-
-            if (!pkMacth)
-            {
-                // dischard actual pk
-                try
-                {
-                    this.DropConstraint(tableAsItMustBe.Name, tableAsItMustBe.PrimaryKeyConstraintName);
-                }
-#pragma warning disable S108 // Nested blocks of code should not be left empty
-                catch (ConstraintDoesNotExistsException) { } // NESTE CASO, se a constraint não existe, tudo bem! Podemos continuar sem problemas. Não precisa nem logar.
-#pragma warning restore S108 // Nested blocks of code should not be left empty
-
-
-                // rebuild pk based on must be
-                var colNames = pkColsMustBe.Select(c => c.Name).ToList();
-                this.CreatePrimaryConstraint(tableAsItMustBe.Name, tableAsItMustBe.PrimaryKeyConstraintName, colNames);
-            }
-
-            //foreach (var col in pkColsMustBe)
-            //{
-            //    var sameColOnDestination = actualColsOnDestination.First(c => c.Name == col.Name);
-            //    if (sameColOnDestination == null)
-            //        throw new ColumnNotFoundException(col.Name);
-            //    else
-            //    {
-            //        if (!sameColOnDestination.IsPartOfPrimaryKey)
-            //        {
-
-            //        }
-            //    }
-            //}
-        }
+        
         public void DropConstraint(string tableName, string constraintName)
         {
             var sql = $"alter table {tableName} drop constraint {constraintName}";
-            using (var cmd = this._conn.CreateCommand())
+            //using (var cmd = this._conn.CreateCommand())
+            //{
+            //    cmd.CommandText = sql;
+            //    cmd.CommandType = CommandType.Text;
+            //    try
+            //    {
+            //        cmd.ExecuteNonQuery();
+            //    }
+            //    catch (SqlException ex)
+            //    {
+            //        if (ex.Number == CONSTRAINT_DOES_NOT_EXISTS)
+            //            throw new ConstraintDoesNotExistsException(constraintName);
+            //        else
+            //            throw;
+            //    }
+            //}
+            try
             {
-                cmd.CommandText = sql;
-                cmd.CommandType = CommandType.Text;
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                }
-                catch (SqlException ex)
-                {
-                    if (ex.Number == CONSTRAINT_DOES_NOT_EXISTS)
-                        throw new ConstraintDoesNotExistsException(constraintName);
-                    else
-                        throw;
-                }
+                executeNonQuery(sql);
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == CONSTRAINT_DOES_NOT_EXISTS)
+                    throw new ConstraintDoesNotExistsException(constraintName);
+                else
+                    throw;
             }
         }
-        public void CreatePrimaryConstraint(string tableName, string constraintName, IList<string> columns)
+        public void CreatePrimaryKeyConstraint(IConstraintPrimaryKey primaryKey)
         {
-            var sb = new StringBuilder();
-            sb.Append("alter table ");
-            sb.Append(tableName);
-            sb.Append(" add constraint ");
-            sb.Append(constraintName);
-            sb.Append(" primary key (");
-            sb.Append(string.Join(", ", columns));
-            sb.Append(")");
+            var cols = primaryKey.Columns.Select(c => c.Name).ToList();
 
-            using (var cmd = this._conn.CreateCommand())
-            {
-                cmd.CommandText = sb.ToString();
-                cmd.CommandType = CommandType.Text;
-                cmd.ExecuteNonQuery();
-            }
+            var sql = $"alter table {primaryKey.TableName} add constraint {primaryKey.ConstraintName} primary key (";
+            sql += string.Join(", ", cols);
+            sql += ")";
+
+            executeNonQuery(sql);
         }
 
 
-        public void EnsureTableCheckConstraints(ITable tableAsItMustBe) { }
-        public void EnsureTableForeignKeys(ITable tableAsItMustBe) { }
+        /*
+        public void CreateCheckConstraint(IConstraintCheck checkConstraint)
+        {
+            var sql = $"alter table {checkConstraint.TableName} add constraint {checkConstraint.ConstraintName} check ({checkConstraint.Condition})";
+            executeNonQuery(sql);
+        }
+        */
+        public void DropConstraint(IConstraintBase constraint)
+        {
+            var sql = $"alter table {constraint.TableName} drop constraint {constraint.ConstraintName}";
+            executeNonQuery(sql);
+        }
+
+
+
+
+        //public void EnsureUniqueConstraints(ITable tableAsItMustBe, IList<IConstraintUniqueKey> actualConstraints) 
+        //{
+        //    var a = 0;
+        //}
+        //public void CreateUniqueConstraints(ITable tableAsItMustBe) 
+        //{
+        //    var a = 0;
+        //}
+        /*
+        public void CreateUniqueConstraint(IConstraintUniqueKey uniqueKeyConstraint)
+        {
+            var a = 0;
+        }
+        public void DropUniqueConstraint(IConstraintUniqueKey uniqueKeyConstraint)
+        {
+            var a = 0;
+        }
+        */
+
+        /*
+        public void EnsureForeignKeyConstraints(ITable tableAsItMustBe, IList<IConstraintForeignKey> actualConstraints) 
+        {
+            var a = 0;
+        }
+        public void CreateForeignKeyConstraints(ITable tableAsItMustBe) 
+        {
+            var a = 0;
+        }
+        */
         #endregion
 
 
@@ -571,12 +690,12 @@ order by ic.key_ordinal
 
                 var mismatchedAllowNull = colOnOrigin.AllowNull != colOnDestination.AllowNull;
                 var mismatchedIsAutoIncrement = colOnOrigin.IsAutoIncrement != colOnDestination.IsAutoIncrement;
-                var mismatchedIsPartOfPrimaryKey = colOnOrigin.IsPartOfPrimaryKey != colOnDestination.IsPartOfPrimaryKey;
+                //var mismatchedIsPartOfPrimaryKey = colOnOrigin.IsPartOfPrimaryKey != colOnDestination.IsPartOfPrimaryKey;
 
                 // TODO: tratar o default
 
 
-                if (mismatchedSqlType || mismatchedMaxLength || mismatchedPrecision || mismatchedScale || mismatchedAllowNull || mismatchedAllowNull || mismatchedIsAutoIncrement || mismatchedIsPartOfPrimaryKey)
+                if (mismatchedSqlType || mismatchedMaxLength || mismatchedPrecision || mismatchedScale || mismatchedAllowNull || mismatchedAllowNull || mismatchedIsAutoIncrement)// || mismatchedIsPartOfPrimaryKey)
                     notMachted.Add(colOnOrigin);
             }
             return notMachted;
@@ -620,11 +739,22 @@ order by ic.key_ordinal
         }
         private void changeColumns(IList<IColumn> mustBeChangedOnDestination)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
         private void dropPrimaryKey()
         {
 
+        }
+
+
+        private void executeNonQuery(string sql)
+        {
+            using (var cmd = this._conn.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.ExecuteNonQuery();
+            }
         }
     }
 }

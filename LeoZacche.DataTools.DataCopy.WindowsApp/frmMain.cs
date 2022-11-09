@@ -333,7 +333,11 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Executing...", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var ui = new ProgressState
+                {
+                    Details = ex.Message,
+                };
+                worker.ReportProgress(1, ui);
                 resultado = false;
             }
             finally

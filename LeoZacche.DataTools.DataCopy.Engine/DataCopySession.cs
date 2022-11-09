@@ -139,14 +139,11 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             else
             {
                 // tabela não existe na conexão destino. Criar!
-                var tableToCreate = new Table { Name = table.Name };
-                tableToCreate.Columns.CloneFrom(tableColumnsOnSource);
-
-                destination.CreateTable(tableToCreate);
+                destination.CreateTable(table);
             }
 
 
-            
+
 
 
             /*

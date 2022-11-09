@@ -108,18 +108,24 @@ namespace LeoZacche.DataTools.DataCopy.Engine
 
             return this._tables;
         }
-        public string GetPrimaryConstraintName(string tablename)
-        {
-            var pkName = this.RealConnection.GetPrimaryConstraintName(tablename);
 
-            return pkName;
-        }
-        public IList<DataColumn> GetPrimaryKeyColumns(string tablename)
+        public ITable GetTable(string tablename)
         {
-            var columns = this.RealConnection.GetPrimaryKeyColumns(tablename);
-
-            return columns;
+            var table = this.RealConnection.GetTable(tablename, true);
+            return table;
         }
+        //public string GetPrimaryConstraintName(string tablename)
+        //{
+        //    var pkName = this.RealConnection.GetPrimaryConstraintName(tablename);
+
+        //    return pkName;
+        //}
+        //public IList<DataColumn> GetPrimaryKeyColumns(string tablename)
+        //{
+        //    var columns = this.RealConnection.GetPrimaryKeyColumns(tablename);
+
+        //    return columns;
+        //}
         public IList<DataColumn> GetAllColumns(string tablename)
         {
             var columns = this.RealConnection.GetAllColumns(tablename);
@@ -138,10 +144,24 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             this._realConnection.CreateTable(table);
 
             var cols = table.Columns.Where(c => c.IsPartOfPrimaryKey).Select(c => c.Name).ToList();
-            this._realConnection.CreatePrimaryConstraint(table.Name, table.PrimaryKeyConstraintName, cols);
+
+            //this._realConnection.CreatePrimaryConstraint(table.Name, table.PrimaryKeyConstraintName, cols);
+            this._realConnection.CreatePrimaryKeyConstraint(table.PrimaryKey);
+
+            /*
+            foreach (var uk in table.UniqueConstraints)
+                this._realConnection.CreateUniqueConstraint(uk);
+
+            foreach (var check in table.CheckConstraints)
+                this._realConnection.CreateCheckConstraint(check);
+                */
+
+            //foreach (var fk in table.ForeignKeyConstraints)
+            //    this._realConnection.CreateForeignKeyConstraint(fk);
         }
         internal void EnsureTableStructure(ITable tableAsItMustBe)
         {
+            var actualTable = this._realConnection.GetTable(tableAsItMustBe.Name, true);
             var actualColsOnDestination = GetAllColumns_NEW(tableAsItMustBe.Name);
             bool tableWasChanged;
 
@@ -149,12 +169,130 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             if (tableWasChanged)
                 actualColsOnDestination = GetAllColumns_NEW(tableAsItMustBe.Name);
 
-            this._realConnection.EnsureTablePrimaryKey(tableAsItMustBe, actualColsOnDestination);
+            //this._realConnection.EnsurePrimaryKeyConstraint(tableAsItMustBe, actualColsOnDestination);
+            this.EnsurePrimaryKeyConstraint(tableAsItMustBe.PrimaryKey, actualTable.PrimaryKey);
 
-            //this._realConnection.EnsureTableCheckConstraints();
-            //this._realConnection.EnsureTableForeignKeys();
+
+            //this._realConnection.EnsureUniqueConstraints(tableAsItMustBe);
+            //this._realConnection.EnsureCheckConstraints(tableAsItMustBe);
+            //this._realConnection.EnsureForeignKeyConstraints(tableAsItMustBe);
+        }
+        public void EnsurePrimaryKeyConstraint(IConstraintPrimaryKey pkAsItMustBe, IConstraintPrimaryKey pkActual)
+        {
+            // verificar o nome, a quantidade de colunas, os nomes das colunas e a ordem das colunas
+            bool columnsMatch = true;
+            var namesMatch = pkAsItMustBe.ConstraintName == pkActual.ConstraintName;
+            var colQtiesMatch = pkAsItMustBe.Columns.Count == pkActual.Columns.Count;
+
+            foreach (var colMustBe in pkAsItMustBe.Columns)
+            {
+                var colActual = pkActual.Columns.FirstOrDefault(c => c.Name == colMustBe.Name);
+
+                if (colActual == null)
+                {
+                    columnsMatch = false;
+                    break;
+                }
+                else
+                {
+                    var colNamesMatch = colMustBe.Name == colActual.Name;
+                    var colSequencesMatch = colMustBe.Ordinal == colActual.Ordinal;
+                    if (!colNamesMatch || !colSequencesMatch)
+                    {
+                        columnsMatch = false;
+                        break;
+                    }
+                }
+            }
+
+
+            var rebuildPk = !namesMatch || !colQtiesMatch || !columnsMatch;
+
+            if (rebuildPk)
+            {
+            
+                // dischard actual pk
+                try
+                {
+                    //this.DropConstraint(pkActual.TableName, pkActual.ConstraintName);
+                    if (pkActual.ConstraintName != null)
+                        this.DropConstraint(pkActual);
+                }
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+                catch (ConstraintDoesNotExistsException) { } // NESTE CASO, se a constraint não existe, tudo bem! Podemos continuar sem problemas. Não precisa nem logar.
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+
+
+
+                // rebuild pk based on must be
+                this._realConnection.CreatePrimaryKeyConstraint(pkAsItMustBe);
+                
+            }
+
+            /*
+                var pkColsMustBe = tableAsItMustBe.Columns.Where(c => c.IsPartOfPrimaryKey).ToList();
+                var pkColsActual = actualColsOnDestination.Where(c => c.IsPartOfPrimaryKey).ToList();
+
+                if (pkColsMustBe.Count != pkColsActual.Count){
+
+                }
+                */
+
+            /*
+            // both collections must have all names must mutch. There cannot be not even one element more on either side.
+            var allNamesOnMustBeExistsOnActual = pkColsMustBe.Any(c => pkColsActual.Exists(d => d.Name == c.Name));
+            var allNamesOnActualExistsOnMustBe = pkColsActual.Any(c => pkColsMustBe.Exists(d => d.Name == c.Name));
+            bool pkMacth = allNamesOnMustBeExistsOnActual && allNamesOnActualExistsOnMustBe;
+
+            if (!pkMacth)
+            {
+            }
+            */
         }
 
+
+        /*
+        internal void EnsureCheckConstraints(ITable tableAsItMustBe, IList<IConstraintCheck> actualConstraints)
+        {
+            // both collections must have elemensts with same name same condition
+
+            var remainingUndesiredConstraints = actualConstraints.Select(c => c.ConstraintName).ToList();
+
+            foreach (var checkInMustBe in tableAsItMustBe.CheckConstraints)
+            {
+                var checkInActual = actualConstraints.First(c => c.ConstraintName == checkInMustBe.ConstraintName);
+
+                if (checkInActual == null)
+                    this._realConnection.CreateCheckConstraint(checkInMustBe);
+                else
+                {
+                    if (checkInMustBe.Condition != checkInActual.Condition)
+                    {
+                        this._realConnection.DropConstraint(checkInActual);
+                        this._realConnection.CreateCheckConstraint(checkInMustBe);
+                    }
+                }
+            }
+
+            foreach (var checkToDrop in remainingUndesiredConstraints)
+            {
+                var theConstraint = actualConstraints.First(c => c.ConstraintName == checkToDrop);
+                this._realConnection.DropConstraint(theConstraint);
+            }
+        }
+        internal void CreateCheckConstraints(ITable tableAsItMustBe)
+        {
+            foreach (var checkInMustBe in tableAsItMustBe.CheckConstraints)
+            {
+                this._realConnection.CreateCheckConstraint(checkInMustBe);
+            }
+        }
+        */
+        //private void DropConstraint(string tablename, string constraintName)
+        private void DropConstraint(IConstraintBase constraint)
+        {
+            this._realConnection.DropConstraint(constraint);
+        }
 
 
 
@@ -262,6 +400,8 @@ namespace LeoZacche.DataTools.DataCopy.Engine
                 return Path.GetDirectoryName(path);
             }
         }
+
+
 
     }
 }

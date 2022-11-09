@@ -107,8 +107,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                 var nodeClicked = this.tvwRegistros.GetNodeAt(e.Location);
                 if (nodeClicked != null)
                 {
-                    var colDefinition = nodeClicked.ConvertTagTo<DataColumn>();
-                    if (colDefinition != null)
+                    if (nodeClicked.Nodes.Count == 0)//somente colunas da PK não contêm nós filhos 
                     {
                         nodeBeingEdited = nodeClicked;
 
@@ -122,23 +121,19 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                         this.txtColumnValue.Width = nodeClicked.Bounds.Width - textWidth;
                         this.txtColumnValue.Height = nodeClicked.Bounds.Height;
 
-                        /*
-                        tvwRegistros.LabelEdit = true;
-                        nodeClicked.BeginEdit();
-                        this.txtColumnValue.Top = 0; //nodeClicked.Bounds.Top;
-                        this.txtColumnValue.Left = 0;// nodeClicked.Bounds.Left + tvwRegistros.;
-                        this.txtColumnValue.Left = tvwRegistros.Left;
-                        this.txtColumnValue.Left = tvwRegistros.Left + tvwRegistros.Margin.Left + tvwRegistros.Nodes[0].Bounds.Left;
-                        this.txtColumnValue.Left = tvwRegistros.Left + tvwRegistros.Margin.Left + tvwRegistros.Nodes[0].Nodes[0].Bounds.Left;
-                        this.txtColumnValue.Left = tvwRegistros.Left + tvwRegistros.Margin.Left + nodeClicked.Bounds.Left + textWidth;
-                        this.txtColumnValue.Left = tvwRegistros.Left + nodeClicked.Bounds.Left + textWidth;
-                        */
-
                         this.txtColumnValue.Top = tvwRegistros.Top + nodeClicked.Bounds.Top;
                         this.txtColumnValue.Left = nodeClicked.Bounds.Left + textWidth;// + padding;
                         this.txtColumnValue.Width = tvwRegistros.Width - this.txtColumnValue.Left + tvwRegistros.Left;
 
-                        this.txtColumnValue.Text = Convert.ToString(colDefinition.ExtendedProperties[COLUMN_VALUE]);
+                        var rowNode = nodeBeingEdited.Parent;
+                        var tableNode = rowNode.Parent;
+                        var tabname = tableNode.Name;
+                        var colname = nodeBeingEdited.Name;
+                        var theTable = this.TablesToCopy.First(t => t.Name == tabname);
+                        var theRow = theTable.RowsToCopy.ElementAt(rowNode.Index);
+
+                        var valueToEdit = Convert.ToString(theRow.PrimaryKeyColumnsValues[colname]);
+                        this.txtColumnValue.Text = valueToEdit;
 
 
                         this.txtColumnValue.Show();
@@ -184,9 +179,15 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             {
                 if (nodeBeingEdited != null)
                 {
-                    var colDefinition = nodeBeingEdited.ConvertTagTo<DataColumn>();
+                    var rowNode = nodeBeingEdited.Parent;
+                    var tableNode = rowNode.Parent;
+                    var tabname = tableNode.Name;
+                    var colname = nodeBeingEdited.Name;
+                    var theTable = this.TablesToCopy.First(t => t.Name == tabname);
+                    var theCol = theTable.PrimaryKey.Columns.First(c => c.Name == colname);
+                    var type = theCol.DataType;
+
                     var text = txtColumnValue.Text;// nodeBeingEdited.Text;
-                    var type = colDefinition.DataType;
                     var value = Convert.ChangeType(text, type);
                     e.Cancel = false; // controle pode perder o foco!
                 }
@@ -268,16 +269,34 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         {
             TreeNode node;
             string nodekey, nodeText;
-            DataColumn colDefinition;
+
+            ITable theTable = this.TablesToCopy.FirstOrDefault(t => t.Name == tablename);
+            if (theTable == null)
+            {
+                theTable = this.getTable(tablename);
+
+                var emptyRow = new Row();
+                foreach (var col in theTable.PrimaryKey.Columns) 
+                {
+                    var colname = col.Name;
+                    var defaultValue = col.DataType.GetDefaultValue();
+                    emptyRow.PrimaryKeyColumnsValues.Add(colname, defaultValue);
+                }
+
+                theTable.RowsToCopy.Add(emptyRow);
+                this.TablesToCopy.Add(theTable);
+            }
+
 
             var tableNode = getNodeByName(tablename);
             if (tableNode == null)
             {
+                
+
+
                 nodekey = $"{tablename}";
                 nodeText = $"{tablename}";
-                var pkName = getPkName(tablename);
                 tableNode = this.tvwRegistros.Nodes.Add(nodekey, nodeText);
-                tableNode.Tag = pkName;
             }
 
             var newRowNumber = tableNode.Nodes.Count + 1;
@@ -285,22 +304,12 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             var rowNode = tableNode.Nodes.Add(rowNodeKey, $"Row {newRowNumber:00}");
             tableNode.Expand();
 
-            var pkColumns = getPkColumns(tablename);
+            var pkColumns = theTable.PrimaryKey.Columns;
             foreach (var col in pkColumns)
             {
-                nodekey = $"{col.ColumnName}";
-                //nodeText = $"{col.ColumnName}: <dbl-click to edit>";
-                nodeText = textForNode(col, "<dbl-click to edit>");
+                nodekey = $"{col.Name}";
+                nodeText = textForNode(col.Name, col.DatabaseSpecificDataType, "<dbl-click to edit>");
                 node = rowNode.Nodes.Add(nodekey, nodeText);
-
-                colDefinition = new DataColumn()
-                {
-                    ColumnName = col.ColumnName,
-                    DataType = col.DataType,
-                };
-
-                colDefinition.ExtendedProperties.Add(COLUMN_VALUE, col.DataType.GetDefaultValue());
-                node.Tag = colDefinition;
                 rowNode.Expand();
             }
 
@@ -317,18 +326,12 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             throw new Exception("Encontrado mais um nó com a mesma chave!!!");
         }
-        private string getPkName(string tablename)
+        private ITable getTable(string tablename)
         {
-            var list = this.theConnection.GetPrimaryConstraintName(tablename);
-
-            return list;
+            var table = this.theConnection.GetTable(tablename);
+            return table;
         }
-        private IList<DataColumn> getPkColumns(string tablename)
-        {
-            var list = this.theConnection.GetPrimaryKeyColumns(tablename);
 
-            return list;
-        }
         private IList<IColumn> getAllColumns(string tablename)
         {
             var list = this.theConnection.GetAllColumns_NEW(tablename);
@@ -366,15 +369,20 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                     {
                         if (this.ValidateChildren())
                         {
-                            var colDefinition = nodeBeingEdited.ConvertTagTo<DataColumn>();
+                            var rowNode = nodeBeingEdited.Parent;
+                            var tableNode = rowNode.Parent;
+                            var tabname = tableNode.Name;
+                            var colname = nodeBeingEdited.Name;
+                            var theTable = this.TablesToCopy.First(t => t.Name == tabname);
+                            var theRow = theTable.RowsToCopy.ElementAt(rowNode.Index);
+                            var theCol = theTable.PrimaryKey.Columns.First(c => c.Name == colname);
+                            var type = theCol.DataType;
+                            var sqlTypename = theCol.DatabaseSpecificDataType;
+                            var newValue = Convert.ChangeType(txtColumnValue.Text, type);
 
-                            var text = txtColumnValue.Text;
-                            var type = colDefinition.DataType;
-                            var newValue = Convert.ChangeType(text, type);
+                            theRow.PrimaryKeyColumnsValues[colname] = newValue;
 
-                            colDefinition.ExtendedProperties[COLUMN_VALUE] = newValue;
-
-                            var newText = textForNode(colDefinition, newValue);
+                            var newText = textForNode(colname, sqlTypename, txtColumnValue.Text);
                             nodeBeingEdited.Text = newText;
                             txtColumnValue.Hide();
                             nodeBeingEdited = null;
@@ -400,6 +408,17 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             var text = $"{columnDefinition.ColumnName} ({typename}): {value}";
             return text;
         }
+        private string textForNode(IColumn column, dynamic value)
+        {
+            var typename = column.DataType.Name;
+            var text = $"{column.Name} ({typename}): {column.Value}";
+            return text;
+        }
+        private string textForNode(string columnName, string typename, string value)
+        {
+            var text = $"{columnName} ({typename}): {value}";
+            return text;
+        }
 
         private void txtColumnValue_VisibleChanged(object sender, EventArgs e)
         {
@@ -414,9 +433,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var listToCopy = buildTablesToCopyList(tvwRegistros.Nodes);
-            this.TablesToCopy.CloneFrom(listToCopy);
-
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -427,19 +443,34 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
             foreach (TreeNode tableNode in listOfTableNodes)
             {
-                var tableToCopy = new Table() { Name = tableNode.Text, PrimaryKeyConstraintName = (string)tableNode.Tag };
+                var tableToCopy = new Table() { Name = tableNode.Text };
+                tableToCopy.PrimaryKey.ConstraintName = (string)tableNode.Tag;
 
                 // assembling a list of rows tro copy
                 foreach (TreeNode rowNode in tableNode.Nodes)
                 {
                     var row = new Row();
+                    var buildPk = (tableToCopy.PrimaryKey.Columns.Count == 0);
 
-                    foreach (TreeNode colNode in rowNode.Nodes)
+                    foreach (TreeNode colNode in rowNode.Nodes) // these cols are the primary key
                     {
                         var colDefinition = colNode.ConvertTagTo<DataColumn>();
                         var columnName = colDefinition.ColumnName;
-                        dynamic vaolumnValue = colDefinition.ExtendedProperties[COLUMN_VALUE];
-                        row.PrimaryKeyColumnsValues.Add(columnName, vaolumnValue);
+                        dynamic columnValue = colDefinition.ExtendedProperties[COLUMN_VALUE];
+                        row.PrimaryKeyColumnsValues.Add(columnName, columnValue);
+
+                        // if the PK of the table is not yet built... build it!
+                        if (buildPk)
+                        {
+                            var newPkCol = new Column
+                            {
+                                Name = columnName,
+                                AllowNull = false, // every column that is part of PK is not null by design
+                                DataType = colDefinition.DataType
+                                // TODO: outras props são necessárias?
+                            };
+                            tableToCopy.PrimaryKey.Columns.Add(newPkCol);
+                        }
                     }
 
                     tableToCopy.RowsToCopy.Add(row);

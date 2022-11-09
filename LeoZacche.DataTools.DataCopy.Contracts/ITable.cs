@@ -7,8 +7,13 @@ namespace LeoZacche.DataTools.DataCopy.Contracts
     public interface ITable
     {
         string Name { get; set; }
-        public IList<IRow> RowsToCopy { get; }
-        public IList<IColumn> Columns { get; }
-        public string PrimaryKeyConstraintName { get; set; }
+        IList<IRow> RowsToCopy { get; }
+        IList<IColumn> Columns { get; }
+        IConstraintPrimaryKey PrimaryKey { get; }
+        //IList<IConstraintUniqueKey> UniqueConstraints { get; }
+        //IList<IConstraintCheck> CheckConstraints { get; }
+        //IList<IConstraintForeignKey> ForeignKeyConstraints { get; }
+
+        ITable Clone();
     }
 }

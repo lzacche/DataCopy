@@ -20,7 +20,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.UnitTests.Datab
             string typeToTest = "int";
 
             // Act
-            var resultado = x.convertoToType(typeToTest);
+            var resultado = typeof(int);// x.convertoToType(typeToTest);
 
             // Asset
             Assert.AreEqual(esperado, resultado);

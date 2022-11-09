@@ -12,15 +12,21 @@ namespace LeoZacche.DataTools.DataCopy.Contracts.Extensions
         {
             listTo.Clear();
 
-            foreach(var fromTable in listfrom)
+            foreach (var fromTable in listfrom)
             {
-                var newTable = new Table()
-                {
-                    Name = fromTable.Name,
-                    PrimaryKeyConstraintName = fromTable.PrimaryKeyConstraintName,
-                };
-                newTable.RowsToCopy.CloneFrom(fromTable.RowsToCopy);
-                newTable.Columns.CloneFrom(fromTable.Columns);
+                /*
+                    var newTable = new Table() { Name = fromTable.Name, };
+
+                    //newTable.PrimaryKey.CloneFrom(fromTable.PrimaryKey);
+                    newTable.PrimaryKey = fromTable.PrimaryKey.Clone();
+
+                    newTable.RowsToCopy.CloneFrom(fromTable.RowsToCopy);
+                    newTable.Columns.CloneFrom(fromTable.Columns);
+                    newTable.UniqueConstraints.CloneFrom(fromTable.UniqueConstraints);
+                    newTable.CheckConstraints.CloneFrom(fromTable.CheckConstraints);
+                    newTable.ForeignKeyConstraints.CloneFrom(fromTable.ForeignKeyConstraints);
+                    */
+                var newTable = fromTable.Clone();
 
                 listTo.Add(newTable);
             }

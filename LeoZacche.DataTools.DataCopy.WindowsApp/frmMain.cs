@@ -219,7 +219,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
         #region Eventos da Sessão de Cópia
 
-        private void TheSession_OnTableCopyStarted(object sender, TableCopyEventArgs e, BackgroundWorker worker)
+        private void TheSession_OnTableCopyStarted(TableCopyEventArgs e, BackgroundWorker worker)
         {
             var ui = new ProgressState
             {
@@ -231,7 +231,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             };
             worker.ReportProgress(1, ui);
         }
-        private void TheSession_OnTableCopyEnded(object sender, TableCopyEventArgs e, BackgroundWorker worker)
+        private void TheSession_OnTableCopyEnded(TableCopyEventArgs e, BackgroundWorker worker)
         {
             var ui = new ProgressState
             {
@@ -240,7 +240,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             };
             worker.ReportProgress(1, ui);
         }
-        private void TheSession_OnRowCopyStarted(object sender, RowCopyEventArgs e, BackgroundWorker worker)
+        private void TheSession_OnRowCopyStarted(RowCopyEventArgs e, BackgroundWorker worker)
         {
             var ui = new ProgressState
             {
@@ -248,7 +248,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             };
             worker.ReportProgress(1, ui);
         }
-        private void TheSession_OnRowCopyEnded(object sender, RowCopyEventArgs e, BackgroundWorker worker)
+        private void TheSession_OnRowCopyEnded(RowCopyEventArgs e, BackgroundWorker worker)
         {
             var ui = new ProgressState
             {
@@ -303,10 +303,10 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         private bool executeCopy(BackgroundWorker worker)
         {
             bool resultado = true;
-            TableCopyEventHandler funcTableStarted = (sender, args) => TheSession_OnTableCopyStarted(sender, args, worker);
-            TableCopyEventHandler funcTableEnded = (sender, args) => TheSession_OnTableCopyEnded(sender, args, worker);
-            RowCopyEventHandler funcRowStarted = (sender, args) => TheSession_OnRowCopyStarted(sender, args, worker);
-            RowCopyEventHandler funcRowEnded = (sender, args) => TheSession_OnRowCopyEnded(sender, args, worker);
+            TableCopyEventHandler funcTableStarted = (sender, args) => TheSession_OnTableCopyStarted(args, worker);
+            TableCopyEventHandler funcTableEnded = (sender, args) => TheSession_OnTableCopyEnded(args, worker);
+            RowCopyEventHandler funcRowStarted = (sender, args) => TheSession_OnRowCopyStarted(args, worker);
+            RowCopyEventHandler funcRowEnded = (sender, args) => TheSession_OnRowCopyEnded(args, worker);
 
             try
             {

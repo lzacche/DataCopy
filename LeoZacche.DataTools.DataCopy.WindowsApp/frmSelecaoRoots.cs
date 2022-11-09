@@ -146,10 +146,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
         {
             this.txtColumnValue.Hide();
         }
-        private void tvwRegistros_Resize(object sender, EventArgs e)
-        {
-
-        }
         private void txtColumnValue_Leave(object sender, EventArgs e)
         {
             endsColumnsValueEditing(false);
@@ -187,12 +183,12 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                     var theCol = theTable.PrimaryKey.Columns.First(c => c.Name == colname);
                     var type = theCol.DataType;
 
-                    var text = txtColumnValue.Text;// nodeBeingEdited.Text;
-                    var value = Convert.ChangeType(text, type);
+                    var text = txtColumnValue.Text;
+                    Convert.ChangeType(text, type);
                     e.Cancel = false; // controle pode perder o foco!
                 }
             }
-            catch //(Exception ex)
+            catch 
             {
                 e.Cancel = true; // controle NÃO PODE perder o foco!
                 // TODO: pensar em uma forma de feedback
@@ -267,7 +263,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
 
         private void addTableToSelected(string tablename)
         {
-            TreeNode node;
             string nodekey, nodeText;
 
             ITable theTable = this.TablesToCopy.FirstOrDefault(t => t.Name == tablename);
@@ -291,9 +286,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             var tableNode = getNodeByName(tablename);
             if (tableNode == null)
             {
-                
-
-
                 nodekey = $"{tablename}";
                 nodeText = $"{tablename}";
                 tableNode = this.tvwRegistros.Nodes.Add(nodekey, nodeText);
@@ -309,7 +301,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             {
                 nodekey = $"{col.Name}";
                 nodeText = textForNode(col.Name, col.DatabaseSpecificDataType, "<dbl-click to edit>");
-                node = rowNode.Nodes.Add(nodekey, nodeText);
+                rowNode.Nodes.Add(nodekey, nodeText);
                 rowNode.Expand();
             }
 
@@ -324,7 +316,7 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             if (list.Count() == 1)
                 return list[0];
 
-            throw new Exception("Encontrado mais um nó com a mesma chave!!!");
+            throw new InvalidOperationException("Encontrado mais um nó com a mesma chave!!!");
         }
         private ITable getTable(string tablename)
         {
@@ -498,7 +490,9 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
                 resultado = (T)node.Tag;
             }
 #pragma warning disable S108 // Nested blocks of code should not be left empty
+#pragma warning disable S2486 // Generic exceptions should not be ignored
             catch { }
+#pragma warning restore S2486 // Generic exceptions should not be ignored
 #pragma warning restore S108 // Nested blocks of code should not be left empty
 
             return resultado;

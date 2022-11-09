@@ -21,8 +21,8 @@ namespace LeoZacche.DataTools.DataCopy.Engine
         }
 
         #region Manipuladores de Eventos
-        public delegate void TableCopyEventHandler(object? sender, TableCopyEventArgs e);
-        public delegate void RowCopyEventHandler(object? sender, RowCopyEventArgs e);
+        public delegate void TableCopyEventHandler(object sender, TableCopyEventArgs e);
+        public delegate void RowCopyEventHandler(object sender, RowCopyEventArgs e);
         #endregion
 
         #region Eventos

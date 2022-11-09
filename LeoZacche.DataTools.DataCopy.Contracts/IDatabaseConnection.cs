@@ -26,11 +26,7 @@ namespace LeoZacche.DataTools.DataCopy.Contracts
         void DropConstraint(IConstraintBase constraint);
 
 
-        //void EnsurePrimaryKeyConstraint(ITable tableAsItMustBe, IList<IColumn> actualColsOnDestination);
-        //void DropConstraint(string tableName, string constraintName);
-        //void CreatePrimaryConstraint(string tableName, string constraintName, IList<string> columns);
         void CreatePrimaryKeyConstraint(IConstraintPrimaryKey primaryKey);
-        //void DropPrimaryKeyConstraint(IConstraintPrimaryKey primaryKey);
 
 
         //void EnsureCheckConstraints(ITable tableAsItMustBe, IList<IConstraintCheck> actualConstraints);

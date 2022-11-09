@@ -53,16 +53,8 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer
             {
                 tmpConn.ConnectionString = buildConnectionString(server, authType, username, password);
 
-                try
-                {
-                    tmpConn.Open();
-                    tmpConn.Close();
-                }
-                catch //(Exception ex)
-                {
-                    //var m = ex.Message;
-                    throw;
-                }
+                tmpConn.Open();
+                tmpConn.Close();
             }
         }
 
@@ -289,127 +281,14 @@ where   t.name = @tablename
         }
 
 
-        /*
-        public string GetPrimaryConstraintName(string tablename)
-        {
-            string tableName = null, primaryKeyName = null;
 
-            var sql = @"
-select  t.name as TableName, pk.name as PrimaryKeyName
-from    sys.key_constraints pk
-        inner join sys.tables t on t.object_id = pk.parent_object_id
-        inner join sys.indexes i on i.name = pk.name
-where t.name = @tablename
-";
-
-            using (var cmd = this._conn.CreateCommand())
-            {
-                cmd.CommandText = sql;
-                cmd.CommandType = CommandType.Text;
-
-                cmd.Parameters.Add(new SqlParameter("tablename", tablename));
-
-                var dr = cmd.ExecuteReader();
-
-                // SIM! Com esta lógica, se houver mais de uma PK, vou considerar somente a última! Baixíssima probabilidade disso ocorrer. Se/Quando acontecer, eu trato.
-                while (dr.Read())
-                {
-                    tableName = TypeUtil.ConvertTo<string>(dr["TableName"]);
-                    primaryKeyName = TypeUtil.ConvertTo<string>(dr["PrimaryKeyName"]);
-                }
-
-                dr.Close();
-            }
-
-            return primaryKeyName;
-        }
-        public IList<DataColumn> GetPrimaryKeyColumns(string tablename)
-        {
-            DataColumn col;
-            int columnOrderInKey;
-            string tableName, primaryKeyName, columnName, typename;
-            Type colType;
-
-            IList<DataColumn> lista = new List<DataColumn>();
-
-            var sql = @"
-select  t.name as TableName, pk.name as PrimaryKeyName, ic.key_ordinal as ColumnOrderInKey, c.name as ColumnName,
-        case when c.scale is null then concat(tp.name, ' (', sc.length, ')')
-             when sc.xprec <> tp.precision and sc.xscale = tp.scale then concat(tp.name, ' (', sc.xprec, ')')
-             when sc.xprec <> tp.precision and sc.xscale <> tp.scale then concat(tp.name, ' (', sc.xprec, ',', sc.xscale, ')')
-             else concat(tp.name, '')
-        end as DataType
-from    sys.key_constraints pk
-        inner join sys.tables t on t.object_id = pk.parent_object_id
-        inner join sys.indexes i on i.name = pk.name
-        inner join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id
-        inner join sys.columns c on c.object_id = ic.object_id and c.column_id = ic.column_id
-        inner join sys.syscolumns sc on sc.id = c.object_id and sc.colid = c.column_id 
-        inner join sys.types tp on tp.user_type_id = sc.xtype
-where   pk.type = 'PK' and 
-        t.name = @tablename
-order by ic.key_ordinal
-";
-
-            using (var cmd = this._conn.CreateCommand())
-            {
-                cmd.CommandText = sql;
-                cmd.CommandType = CommandType.Text;
-
-                cmd.Parameters.Add(new SqlParameter("tablename", tablename));
-
-                var dr = cmd.ExecuteReader();
-
-                while (dr.Read())
-                {
-                    tableName = TypeUtil.ConvertTo<string>(dr["TableName"]);
-                    primaryKeyName = TypeUtil.ConvertTo<string>(dr["PrimaryKeyName"]);
-                    columnName = TypeUtil.ConvertTo<string>(dr["ColumnName"]);
-                    columnOrderInKey = TypeUtil.ConvertTo<int>(dr["ColumnOrderInKey"]);
-                    typename = TypeUtil.ConvertTo<string>(dr["DataType"]);
-
-                    colType = SqlTypeExtensions.ConvertoToType(typename);
-
-                    col = new DataColumn(columnName, colType);
-                    lista.Add(col);
-                }
-
-                dr.Close();
-            }
-
-            return lista;
-        }
-        */
         public IConstraintPrimaryKey GetPrimaryKey(string tablename)
         {
             IConstraintPrimaryKey thePrimaryKey = new ConstraintPrimaryKey();
-            //DataColumn col;
             IColumn col;
-            int columnOrderInKey;
-            //string tableName, primaryKeyName, columnName, typename;
             string primaryKeyName;
-            Type colType;
 
-            IList<DataColumn> lista = new List<DataColumn>();
 
-            var sql2 = @"
-select  t.name as TableName, pk.name as PrimaryKeyName, ic.key_ordinal as ColumnOrderInKey, c.name as ColumnName,
-        case when c.scale is null then concat(tp.name, ' (', sc.length, ')')
-             when sc.xprec <> tp.precision and sc.xscale = tp.scale then concat(tp.name, ' (', sc.xprec, ')')
-             when sc.xprec <> tp.precision and sc.xscale <> tp.scale then concat(tp.name, ' (', sc.xprec, ',', sc.xscale, ')')
-             else concat(tp.name, '')
-        end as DataType
-from    sys.key_constraints pk
-        inner join sys.tables t on t.object_id = pk.parent_object_id
-        inner join sys.indexes i on i.name = pk.name
-        inner join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id
-        inner join sys.columns c on c.object_id = ic.object_id and c.column_id = ic.column_id
-        inner join sys.syscolumns sc on sc.id = c.object_id and sc.colid = c.column_id 
-        inner join sys.types tp on tp.user_type_id = sc.xtype
-where   pk.type = 'PK' and 
-        t.name = @tablename
-order by ic.key_ordinal
-";
             var sql = @"
 select  t.name as TableName, c.ColOrder, c.Name, tp.Name as SqlServerDataType, c.Length, c.XPrec, c.XScale, c.IsNullable, 
         idCol.Is_Identity, case when ic.column_id is null then 'N' else 'Y' end as IsPartOfPrimaryKey,
@@ -437,13 +316,7 @@ order by ic.key_ordinal
 
                 while (dr.Read())
                 {
-                    //tableName = TypeUtil.ConvertTo<string>(dr["TableName"]);
                     primaryKeyName = TypeUtil.ConvertTo<string>(dr["PrimaryKeyName"]);
-                    //columnName = TypeUtil.ConvertTo<string>(dr["ColumnName"]);
-                    //columnOrderInKey = TypeUtil.ConvertTo<int>(dr["ColumnOrderInKey"]);
-                    //typename = TypeUtil.ConvertTo<string>(dr["DataType"]);
-
-                    //colType = SqlTypeExtensions.ConvertoToType(typename);
 
                     if (thePrimaryKey.ConstraintName == null)
                     {
@@ -453,11 +326,6 @@ order by ic.key_ordinal
 
                     col = extractColumnFromDataReader(dr);
                     thePrimaryKey.Columns.Add(col);
-
-
-
-                    //col = new DataColumn(columnName, colType);
-                    //lista.Add(col);
                 }
 
                 dr.Close();

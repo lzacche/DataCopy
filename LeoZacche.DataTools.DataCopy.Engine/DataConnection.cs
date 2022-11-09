@@ -384,7 +384,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine
             if (count == 0)
             {
                 string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
-                throw new ApplicationException(
+                throw new TypeLoadException(
                     $"Can't find any type which implements IDatabaseConnection in {assembly} from {assembly.Location}.\n" +
                     $"Available types: {availableTypes}");
             }

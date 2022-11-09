@@ -115,7 +115,7 @@ namespace LeoZacche.DataTools.DataCopy.Engine.MicrosoftSqlServer.Extensions
 
 
                 default:
-                    throw new Exception($"Não sei como tratar o tipo '{databaseType}'.");
+                    throw new UnknownSqlTypeException(databaseType);
             }
 
             return resultado;

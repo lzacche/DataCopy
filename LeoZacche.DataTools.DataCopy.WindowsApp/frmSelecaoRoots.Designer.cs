@@ -116,7 +116,6 @@ namespace LeoZacche.DataTools.DataCopy.WindowsApp
             this.tvwRegistros.TabIndex = 0;
             this.tvwRegistros.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.tvwRegistros_AfterLabelEdit);
             this.tvwRegistros.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvwRegistros_NodeMouseDoubleClick);
-            this.tvwRegistros.Resize += new System.EventHandler(this.tvwRegistros_Resize);
             // 
             // btnFechar
             // 
